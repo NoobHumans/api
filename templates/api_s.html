@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="propeller" content="ff483c73168747432e265498bc55d9b7">
+	<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+
+	<title>JOJO-APIs</title>
+
+	<!-- Google font -->
+	<link href="https://fonts.googleapis.com/css?family=Oswald:700" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Lato:400" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Audiowide">
+
+	<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css-api/font-awesome.min.css') }}" />
+  <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css-api/gaya.css') }}" />
+  <script src="{{url_for('static', filename='js.js')}}"></script>
+
+<style>
+            .center {
+              margin-left: auto;
+              margin-right: auto;
+              width: 50%;
+            }
+.marquee {
+ height: 40px;	
+ overflow: hidden;
+ position: relative;
+}
+.marquee h3 {
+ font-size: 1em;
+ color: rgb(0, 0, 0);
+ position: absolute;
+ width: 100%;
+ height: 100%;
+ margin: 0;
+ line-height: 50px;
+ text-align: center;
+ /* Starting position */
+ -moz-transform:translateX(100%);
+ -webkit-transform:translateX(100%);	
+ transform:translateX(100%);
+ /* Apply animation to this element */	
+ -moz-animation: marquee 15s linear infinite;
+ -webkit-animation: marquee 15s linear infinite;
+ animation: marquee 15s linear infinite;
+}
+/* Move it (define the animation) */
+@-moz-keyframes marquee {
+ 0%   { -moz-transform: translateX(100%); }
+ 100% { -moz-transform: translateX(-100%); }
+}
+@-webkit-keyframes marquee {
+ 0%   { -webkit-transform: translateX(100%); }
+ 100% { -webkit-transform: translateX(-100%); }
+}
+@keyframes marquee {
+ 0%   { 
+ -moz-transform: translateX(100%); /* Firefox bug fix */
+ -webkit-transform: translateX(100%); /* Firefox bug fix */
+ transform: translateX(100%); 		
+ }
+ 100% { 
+ -moz-transform: translateX(-100%); /* Firefox bug fix */
+ -webkit-transform: translateX(-100%); /* Firefox bug fix */
+ transform: translateX(-100%); 
+ }
+}
+            </style>  
+</head>
+<body>
+	<div id="notfound">
+		<div class="notfound-bg">
+			<div></div>
+			<div></div>
+			<div></div>
+			<div></div>
+    </div>
+    <div class="notfound">
+      <div class="notfound-404">
+        <h1 class="center">JOJO-APIs</h1>
+        <div class="marquee">
+  <h3>KALO IRI BILANG BOS, JANGAN KEK BENCONG... HAHAY PAPALEPAPALE</h3>
+  </div>
+<script type="text/javascript" src="https://uprimp.com/bnr.php?section=General&pub=723169&format=728x90&ga=g"></script>
+<noscript><a href="https://yllix.com/publishers/723169" target="_blank"><img src="//ylx-aff.advertica-cdn.com/pub/728x90.png" style="border:none;margin:0;padding:0;vertical-align:baseline;" alt="ylliX - Online Advertising Network" /></a></noscript>
+        <table class="center">
+          <tr>
+            <th class="eg1">API</th>
+            <th class="eg4">Parameter</th>
+            <th class="eg3">Usage</th>
+          </tr>
+         <tr>
+            <td>Instagram Stalker</td>
+            <td>username</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/stalk?username=call_me.jojo">Example</a></td>
+          </tr>
+          <tr>
+            <td>Random Quotes</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/randomquotes">Example</a></td>
+          </tr>
+          <tr>
+            <td>Random Anime Quotes</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/quotesnime/random">Example</a></td>
+          </tr>
+          <tr>
+            <td>Wikipedia.</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/wiki?q=makanan">Example</a></td>
+          </tr>
+          <tr>
+            <td>Random Waifu</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/waifu">Example</a></td>
+          </tr>
+          <tr>
+          <tr>
+              <td>Info Gempa</td>
+              <td>-</td>
+              <td><a target="_blank" rel="noopener noreferrer" href="/api/infogempa">Example</a></td>
+          </tr>
+            <td>Random Nekonime</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/nekonime">Example</a></td>
+          </tr>
+          <tr>
+            <td>Search Chord Guitar</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/chord?q=aku+bukan+boneka">Example</a></td>
+          </tr>
+          <tr>
+            <td>Dewabatch scraper</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/dewabatch?q=darling+in+the+franxx">Example</a></td>
+          </tr>
+          <tr>
+              <td>Kusonime scraper</td>
+              <td>q</td>
+              <td><a target="_blank" rel="noopener noreferrer" href="/api/kuso?q=kanojo+okarishimasu">Example</a></td>
+          </tr>
+          <tr>
+                 <td>Spam sms</td>
+                 <td>no&jum</td>
+                 <td><a target="_blank" rel="noopener noreferrer" href="/api/spamsms?no=085812345678&jum=3">Example</a></td>
+             <tr>
+                 <td>Spam call</td>
+                 <td>no</td>
+                 <td><a target="_blank" rel="noopener noreferrer" href="/api/spamcall?no=85671568291">Example</a></td>
+             </tr>
+          <td>MediaFire</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/mediafire?url=http://www.mediafire.com/file/vexl3vst7h8ydb3/python-3.8.6-amd64.exe/file">Example</a></td>
+          </tr>
+          <td>TikTok No WM</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/tiktok_nowm?url=https://www.tiktok.com/@bellapoarch/video/6871376520468794629">Example</a></td>
+          </tr>
+          <td>TikTok With WM</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/tiktok_wm?url=https://www.tiktok.com/@bellapoarch/video/6871376520468794629">Example</a></td>
+          </tr>
+          <td>Neon Light</td>
+            <td>text</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/neon_light?text=jojo">Example</a></td>
+          </tr>
+          <td>Logo BlackPink</td>
+            <td>text</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/blackpink?text=jojo">Example</a></td>
+          </tr>
+          <td>Renungan Harian</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/renungan">Example</a></td>
+          </tr>
+          <td>Ayat alkitab Harian</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/alkitab">Example</a></td>
+          </tr>
+          <td>TikTok Profile Pic</td>
+            <td>user</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/tiktokpp?user=reemarmartin">Example</a></td>
+          </tr>
+          <td>Samehadaku Search</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/samehadaku?q=boruto">Example</a></td>
+          </tr>
+          <td>Samehadaku V2</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/samehadaku2?url=https://samehadaku.vip/anime/boruto-naruto-next-generations/">Example</a></td>
+          </tr>
+          <td>Random Waifu V2</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/waifu2">Example</a></td>
+          </tr>
+          <td>Text 3D</td>
+            <td>text</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/text3d?text=JOJO">Example</a></td>
+          </tr>
+          <td>Glitch Logo</td>
+            <td>text1, text2, & text3</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/ttlogo?text1=JOJO&text2=API">Example</a></td>
+          </tr>
+          <td>Thunder Text</td>
+            <td>text</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/thunder?text=JOJO">Example</a></td>
+          </tr>
+          <td>NeoNime Lastest</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/neonime_lastest">Example</a></td>
+          </tr>
+          <td>Informasi Nomor</td>
+            <td>no</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/infonomor?no=082164361939">Example</a></td>
+          </tr>
+          <td>Trending Twitter</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/trendingtwitter">Example</a></td>
+          </tr>
+          <td>Cineplex ComingSoon</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/cineplex">Example</a></td>
+          </tr>
+          <td>Info Hoax</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/infohoax">Example</a></td>
+          </tr>
+          <td>Info Hoax V2</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/gethoax?url=https://turnbackhoax.id/2020/12/12/salah-kondom-halal-mengandung-air-zam-zam-dijamin-barokah-m-pun-bebas-godaan-syetan-sudah-halal-mui/">Example</a></td>
+          </tr>
+          <td>Info Loker</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/infoloker">Example</a></td>
+          </tr>
+          <td>Search Alkitab Verse</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/alkitabsearch?q=Matius 7:7">Example</a></td>
+          </tr>
+          <td>Jadwal TV Now</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/jadwaltvnow">Example</a></td>
+          </tr>
+          <td>Jadwal Tv</td>
+            <td>ch</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/jadwaltv?ch=gtv">Example</a></td>
+          </tr>
+          <td>Most Viewed film</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/mostviewfilm">Example</a></td>
+          </tr>
+          <td>Fvck My LIfe</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/fml">Example</a></td>
+          </tr>
+          <tr>
+            <td>Random KataCinta</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/katacinta">Example</a></td>
+          </tr>
+          <tr>
+            <td>Random TwichQuote</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/twichquote">Example</a></td>
+          </tr>
+          <tr>
+            <td>Random Loli</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/randomloli">Example</a></td>
+          </tr>
+          <tr>
+            <td>Youtube Play</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/yt-play?q=lagu%20bersih">Example</a></td>
+          </tr>
+          <tr>
+            <td>Random Husbu</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/husbuando">Example</a></td>
+          </tr>
+          <tr>
+            <td>Youtube Mp3</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/ytmp3?url=youtube.com/watch?v=jNQXAC9IVRw">example</a></td>
+          </tr>
+          <tr>
+            <td>Youtube Mp4</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/ytmp4?url=youtube.com/watch?v=jNQXAC9IVRw">Example</a></td>
+          </tr>
+          <tr>
+            <td>Fake Identity</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/fake_identity">Example</a></td>
+          </tr>
+          <tr>
+            <td>Screed gif</td>
+            <td>text</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/screed?text=Jojo Rest APIs">Example</a></td>
+          </tr>
+          <tr>
+            <td>Search Alkitab Songs</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/alkitab_songs?q=mengikut yesus keputusanku">Example</a></td>
+          </tr>
+          <tr>
+            <td>Instagram Post</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/insta?url=https://www.instagram.com/p/CHzFF4vH-xV/">Example</a></td>
+          </tr>
+          <tr>
+            <td>Instagram Post V2</td>
+            <td>username</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/insta_v2?username=reemar.official18">Example</a></td>
+          </tr>
+          <tr>
+            <td>Instagram TV</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/igtv?url=https://www.instagram.com/tv/CIIwh9OH2FV/">Example</a></td>
+          </tr>
+          <tr>
+            <td>Instagram Story</td>
+            <td>username</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/igstory?username=bella.poarch">Example</a></td>
+          </tr>
+          <tr>
+            <td>Instagram Highlight</td>
+            <td>username</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/ighighlight?username=reemar.official18">Example</a></td>
+          </tr>
+          <tr>
+            <td>Wattpad Search</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/wattpad_search?q=bengek hyung">Example</a></td>
+          </tr>
+          <tr>
+            <td>Wattpad Story Info</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/wattpad_info?url=https://www.wattpad.com/story/226120582-my-teacher-levi-x-student-reader">Example</a></td>
+          </tr>
+          <tr>
+            <td>ScreenShot Website</td>
+            <td>url & device</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/ssweb?url=http://docs-jojo.herokuapp.com/api&device=phone">Example</a></td>
+          </tr>
+          <tr>
+            <td>ScreenShot Website Full</td>
+            <td>url & device</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/ssweb_full?url=http://docs-jojo.herokuapp.com/api&device=phone">Example</a></td>
+          </tr>
+          <tr>
+            <td>ScreenShot Website PDF</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/ssweb_pdf?url=http://docs-jojo.herokuapp.com/api">Example</a></td>
+          </tr>
+          <tr>
+            <td>TikTok Audio</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/tiktok_audio?url=https://www.tiktok.com/@bellapoarch/video/6871376520468794629">Example</a></td>
+          </tr>
+          <tr>
+            <td>TikTok Profile</td>
+            <td>username</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/tiktok_profile?username=reemarmartin">example</a></td>
+          </tr>
+          <tr>
+            <td>Facebook Post</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/fb?url=https://www.facebook.com/asiancrush.tv/videos/4225888500786028">example</a></td>
+          </tr>
+          <tr>
+            <td>Line Sticker</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/line_sticker?url=https://store.line.me/stickershop/product/5135527/en">example</a></td>
+          </tr>
+          <tr>
+            <td>Pinterest</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/pinterest?url=https://www.pinterest.com/pin/777293216922470174/">example</a></td>
+          </tr>
+          <tr>
+            <td>Translate</td>
+            <td>text, from, to</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/translate?text=namaku jojo&from=id&to=en">Example</a></td>
+          </tr>
+          <tr>
+            <td>Kbbi Search</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/kbbi?q=semua">example</a></td>
+          </tr>
+          <tr>
+            <td>GSM Arena</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/gsm_arena?q=Asus ROG">example</a></td>
+          </tr>
+          <tr>
+            <td>Emoji To PNG</td>
+            <td>emoji & type</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/emoji2png?emoji=😉&type=apple">example</a></td>
+          </tr>
+          <tr>
+            <td>Remove Background</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/remove-bg?url=https://media.suara.com/pictures/original/2020/04/28/53405-reemar-martin-instagramatrreemar.jpg">example</a></td>
+          </tr>
+          <tr>
+            <td>QR Maker</td>
+            <td>text</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/qrcode?text=Jojo Rest API's">example</a></td>
+          </tr>
+            <td>QR Reader</td>
+            <td>image_url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/qr_read?image_url=https://telegra.ph/file/04c036324c7a7bf64a0f4.png">example</a></td>
+          <tr>
+            <td>Resep Masakan</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/resep?q=nasi goreng">example</a></td>
+          </tr>
+          <tr>
+            <td>Barcode maker</td>
+            <td>text</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/barcode_maker?text=Jojo%20Rest%20API%27s">example</a></td>
+          </tr>
+          <tr>
+            <td>Upload Image</td>
+            <td>POST</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/img_upload">example</a></td>
+          </tr>
+          <tr>
+            <td>YouTube Search</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/yt-search?q=anjay">example</a></td>
+          </tr>
+          <tr>
+            <td>Smule Recording</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/smule_recording?url=https://www.smule.com/recording/hillsong-united-oceans-where-feet-may-fail/525653900_3215755859/ensembles">example</a></td>
+          </tr>
+          <tr>
+            <td>PlayStore</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/playstore?q= free fire">example</a></td>
+          </tr>
+          <tr>
+            <td>Twitter Post</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/twitter?url=https://twitter.com/i/status/1350125897047793671">example</a></td>
+          </tr>
+          <tr>
+            <td>Barcode Reader</td>
+            <td>image_url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/barcode_read?image_url=https://i.ibb.co/1z4c9jn/CJF9-N9barcode-maker.png">example</a></td>
+          </tr>
+          <tr>
+            <td>NeoNime Search</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/neonime_search?q=boruto">example</a></td>
+          </tr>
+          <tr>
+            <td>NeoNime Batch</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/neonime_batch?url=https://neonime.vip/batch/eromanga-sensei-bd-batch-subtitle-indonesia/">example</a></td>
+          </tr>
+          <tr>
+            <td>Get Sticker</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/getsticker?q=pentol">example</a></td> 
+          </tr>
+          <tr>
+            <td>Wallpaper HD</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/wallpaper_hd?q=aesthetic">example</a></td> 
+          </tr>
+          <tr>
+            <td>Shorturl.at</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/shorturl-at?url=https://google.com">example</a></td> 
+          </tr>
+          <tr>
+            <td>Cuttly</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/cuttly?url=https://google.com">example</a></td> 
+          </tr>
+          <tr>
+            <td>Cersex</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/cersex">example</a></td>
+          </tr>
+          <tr>
+            <td>Cerpen</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/cerpen">example</a></td>
+          </tr>
+          <tr>
+            <td>Tafsir quran</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/tafsir?q=riba">example</a></td>
+          </tr>
+          <tr>
+            <td>Meme Generator</td>
+            <td>top, bottom & img</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/meme-gen?top=gatau%20bro&bottom=ini%20bukan%20meme*&img=https://static.wikia.nocookie.net/dogelore/images/9/97/Doge.jpg/revision/latest/top-crop/width/360/height/450?cb=20190205113053">example</a></td>
+          </tr>
+          <tr>
+            <td>Github Profile</td>
+            <td>username</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/github_profile?username=phodal">example</a></td>
+          </tr>
+          <tr>
+            <td>Arti Nama</td>
+            <td>nama</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/artinama?nama=jojo">example</a></td>
+          </tr>
+          <tr>
+            <td>Nomer Hoki</td>
+            <td>nomer</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/nomer_hoki?nomer=08951580004">example</a></td>
+          </tr>
+          <tr>
+            <td>Rain Gif</td>
+            <td>image_url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/rain_gif?image_url=https://i.ibb.co/d29pTgJ/B5-Z5-VP10565052-20190408044719.jpg">example</a></td>
+          </tr>
+          <tr>
+            <td>Fancy Text</td>
+            <td>text</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/fancy?text=Jojo Rest APIs">example</a></td>
+          </tr>
+          <tr>
+            <td>Gaming Logo</td>
+            <td>text</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/gaming?text=Jojo Rest API's">example</a></td>
+          </tr>
+          <tr>
+            <td>Galaxy Wallpaper</td>
+            <td>text</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/galaxywp?text=Jojo%20Rest%20API%27s">example</a></td>
+          </tr>
+          <tr>
+            <td>Toonify</td>
+            <td>image_url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/toonify?image_url=https://i.ibb.co/7VWvkyR/FH36-YDw644.jpg">example</a></td>
+          </tr>
+          <tr>
+            <td>IP Geolocation</td>
+            <td>ip</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/ip_geolocation?ip=8.8.8.8">example</a></td>
+          </tr>
+          <tr>
+            <td>Hero ML</td>
+            <td>hero</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/heroml?hero=alucard">example</a></td>
+          </tr>
+          <tr>
+            <td>Arti Mimpi</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/artimimpi?q=ular">example</a></td>
+          </tr>
+          <tr>
+            <td>Tanggal Jadian</td>
+            <td>tgl, bln, thn</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/tanggal_jadian?tgl=28&bln=10&thn=2019">example</a></td>
+          </tr>
+          <tr>
+            <td>WaterColor Text</td>
+            <td>text</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/watercolor?text=Jojo%20Rest%20API%27s">Example</a></td>
+          </tr>
+          <tr>
+            <td>Sparkling Text</td>
+            <td>text1 & text2</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/sparkling?text1=Jojo&text2=Rest API's">Example</a></td>
+          </tr>
+          <tr>
+            <td>Baguette Anime</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/random_baguette">Example</a></td>
+          </tr>
+          <tr>
+            <td>D.V.A Anime</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/random_dva">Example</a></td>
+          </tr>
+          <tr>
+            <td>Yuri Anime</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/random_yuri">Example</a></td>
+          </tr>
+          <tr>
+            <td>Tongue Twister</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/tongue_twister">Example</a></td>
+          </tr>
+          <tr>
+            <td>Calendar</td>
+            <td>image_url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/calendar?image_url=https://i.ibb.co/jkwfnyy/0-VLWBBimages.jpg">Example</a></td>
+          </tr>
+          <tr>
+            <td>Burning Fire</td>
+            <td>image_url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/burning_fire?image_url=https://i.ibb.co/jkwfnyy/0-VLWBBimages.jpg">Example</a></td>
+          </tr>
+          <tr>
+            <td>Neon Writing</td>
+            <td>text1 & text2</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/neon_writing?text1=Jojo%20Rest&text2=API%27s">Example</a></td>
+          </tr>
+          <tr>
+            <td>Jadwal Shalat</td>
+            <td>daerah</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/jadwalshalat?daerah=medan">example</a>
+          </tr>
+          <tr>
+            <td>Berita Terbaru</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/news">Example</a></td>
+          </tr>
+          <tr>
+            <td>Retro Neon</td>
+            <td>text1, text2 & text3</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/neon?text1=Jojo&text2=Rest&text3=API%27s">Example</a></td>
+          </tr>
+          <tr>
+            <td>Pornhub Logo</td>
+            <td>text1 & text2</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/phblogo?text1=JOJO&text2=APIs">Example</a></td>
+          </tr>
+          <tr>
+            <td>Lightning Effect</td>
+            <td>image_url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/lightning?image_url=https://i.ibb.co/jkwfnyy/0-VLWBBimages.jpg">Example</a></td>
+          </tr>
+          <tr>
+            <td>Search Lirik</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/lirik?q=anjay">Example</a></td>
+          </tr>
+          <tr>
+            <td>Random Pantun</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/random_pantun">Example</a></td>
+          </tr>
+          <tr>
+            <td>Tebak Gambar</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/tebakgambar">Example</a></td>
+          </tr>
+          <tr>
+            <td>Search Anime</td>
+            <td>image_url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/search_anime?image_url=https://i.ibb.co/NpdKSyp/c1-P0-JHOI0-TFeak-Eg-Aaf-Xh7-Bx-GZero-Two-Strelizia-True-Apus.jpg">Example</a></td>
+          </tr>
+          <tr>
+            <td>Jurnal Otaku Search</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/jurnalotaku_search?q=sagiri">Example</a></td>
+          </tr>
+          <tr>
+            <td>Jurnal Otaku Lastest</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/jurnalotaku_lastest">Example</a></td>
+          </tr>
+          <tr>
+            <td>Kurs</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/kurs">Example</a></td>
+          </tr>
+          <tr>
+            <td>Cari Bioskop</td>
+            <td>kota</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/bioskop?kota=medan">Example</a></td>
+          </tr>
+          <tr>
+            <td>Cuaca</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/cuaca?q=medan">Example</a></td>
+          </tr>
+          <tr>
+            <td>Hilih Text</td>
+            <td>text</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/hilih?text=ini text">Example</a></td>
+          </tr>
+          <tr>
+            <td>Ninja Name</td>
+            <td>name</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/ninja_name?name=jojo">Example</a></td>
+          </tr>
+          <tr>
+            <td>Baca Komik</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/baca-komik?q=sagiri">Example</a></td>
+          </tr>
+          <tr>
+            <td>Tribun</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/tribun">Example</a></td>
+          </tr>
+          <tr>
+            <td>Liputan 6</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/liputan6">Example</a></td>
+          </tr>
+          <tr>
+            <td>APK Pure Search</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/apk-pure?q=free fire">Example</a></td>
+          </tr>
+        </table>
+        <br></br>
+
+      </div>
+    </div>
+  </div>
+
+</body><!-- This templates was made by Colorlib (https://colorlib.com) -->
+
+</html>
