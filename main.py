@@ -90,6 +90,42 @@ def file_tts():
     file_ = 'tts/'+id_generator()+'.mp3'
     return file_
 
+def ig_header():
+    result = {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Accept-Language": "id,en-US;q=0.7,en;q=0.3",
+        "Cache-Control": "max-age=0",
+        "Connection": "keep-alive",
+        "Cookie": "mid=YF7sjAALAAF-MqtkhOPIopCo5kNU; ig_did=1D303523-9F83-4CF9-8E13-1433BD0F9352; ig_nrcb=1; fbm_124024574287414=base_domain=.instagram.com; csrftoken=G5Bq0h0W3rSWhjV9bnADx8hJIRlfkp3h; ds_user_id=44449831791; sessionid=44449831791%3AUWaB4y4KQW9O6G%3A12; shbid=2573; shbts=1621268761.4835796; rur=NAO",
+        "Host": "www.instagram.com",
+        "Upgrade-Insecure-Requests": "1",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0"
+    }
+    return result
+
+def add_total_hit():
+    try:
+        load = json.load(open('static/hit.json'))
+        write = open('static/hit.json', 'w')
+        load['total'] +=1
+        json.dump(load, write)
+    except Exception as e:
+        print(e)
+
+@app.after_request
+def log_the_status_code(response):
+    status_as_integer = response.status_code
+    rule = request.url_rule
+    if '/api/' in rule.rule:
+        if response.status_code == 200:
+            try:
+                add_total_hit()
+            except Exception:
+                pass
+
+    return response
+
 @app.route('/api/spamcall', methods=['GET','POST'])
 def spamcall():
     if request.args.get('no'):
@@ -428,7 +464,33 @@ def stalk():
     if request.args.get('username'):
         try:
             username = request.args.get('username').replace('@','')
-            return scr.igstalk('', username)
+            url = 'https://www.instagram.com/'+username+'/?__a=1'
+            header = ig_header()
+            res = requests.get(url, headers=header).json()
+            user = res['graphql']['user']
+            bio = user['biography']
+            external_url = user['external_url']
+            followers = user['edge_followed_by']['count']
+            following = user['edge_follow']['count']
+            name = user['full_name']
+            category_name = user['category_name']
+            is_private = user['is_private']
+            is_verified = user['is_verified']
+            profile_pic = user['profile_pic_url_hd']
+            result = dict(
+                username = username,
+                biography= bio,
+                external_url = external_url,
+                followers = followers,
+                following = following,
+                name = name,
+                category_name = category_name,
+                is_private = is_private,
+                is_verified = is_verified,
+                profile_pic = profile_pic
+                )
+
+            return result
         except Exception as e:
             print(e)
             return {
@@ -522,7 +584,7 @@ def blackpink():
             js = json.loads(fv)
             res = r.post('https://textpro.me/effect/create-image', data={'id': '1001', 'text[]': text, 'token': js['token'], 'build_server': build_server, 'build_server_id': build_server_id}).json()
             result = 'https://textpro.me'+res['image']
-            req = requests.get(result)
+            req = r.get(result)
             with open('img/blackpink.jpg', 'wb') as f:
                 f.write(req.content)
             crop.crop4('', 'blackpink')
@@ -543,25 +605,24 @@ def blackpink():
 def tiktok_nowm():
     if request.args.get('url'):
         try:
-            link = request.args.get('url')
-            scraper = cloudscraper.create_scraper()
-            be = bs(scraper.get('https://ssstik.io/id').text, 'html.parser').find('form', class_='pure-form pure-g hide-after-request')
-            url = 'https://ssstik.io'+be['data-hx-post']
-            tt_s = be['include-vals']
-            tt = tt_s[4:36]
-            ts = tt_s[42:56]
-            posts = bs(scraper.post(url, data={'id': link, 'locale': 'id', 'tt': tt, 'ts': ts}).text, 'html.parser')
-            nowm1 = 'https://ssstik.io'+posts.find('a', class_='pure-button pure-button-primary is-center u-bl dl-button download_link without_watermark')['href']
-            nowm2 = 'https://ssstik.io'+posts.find('a', class_='pure-button pure-button-primary is-center u-bl dl-button download_link without_watermark_direct')['href']
-            caption = posts.find('p', class_='maintext').text
-            from_ = posts.find('img', class_='u-round u-l')['alt']
-            return {
-                'from': from_,
-                'caption': caption,
-                'result':{
-                    '1': nowm1,
-                    '2': nowm2
-                }
+            video_url = request.args.get('url')
+            s = requests.Session()
+            get_post = bs(s.get(
+                url='https://ssstik.io/',
+            ).text, 'html.parser').find('form', class_='pure-form pure-g hide-after-request')['data-hx-post']
+            base = bs(s.post(
+                url=f'https://ssstik.io{get_post}',
+                headers={'HX-Current-URL': 'https://ssstik.io/', 'Host': 'ssstik.io', 'Origin': 'https://ssstik.io', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0'},
+                data={'id': video_url, 'locale': 'en', 'tt': '0', 'ts': '0'}
+            ).text, 'html.parser')
+            from_ = base.find('img')['alt']
+            caption = base.find('p', class_='maintext').text
+            s1 = 'https://ssstik.io'+base.find('a', class_='pure-button pure-button-primary is-center u-bl dl-button download_link without_watermark snaptik')['href']
+            s2 = base.find('a', class_='pure-button pure-button-primary is-center u-bl dl-button download_link without_watermark_direct snaptik')['href']
+            return{
+                "from": from_,
+                "caption": caption,
+                "download":{"server1": s1, "server2": s2}
             }
         except Exception as e:
             print('Error : %s ' % e)
@@ -664,11 +725,11 @@ def samehadaku2():
 
 @app.route('/api/alkitab', methods=['GET','POST'])
 def alkitab():
-    dataz=h.bs('https://www.bible.com/id/verse-of-the-day')
-    image = dataz.find("meta",{"property":"og:image"}).get("content")
-    link=dataz.find("meta", {"property":"og:url"}).get("content")
-    be = bs(get('https://www.bible.com/id/verse-of-the-day/').text, 'html.parser')
-    baca = be.find('div', class_="verse-wrapper ml1 mr1 mt4 mb4")
+    r = cloudscraper.create_scraper()
+    dataz=bs(r.get('https://www.bible.com/id/verse-of-the-day').text,'html5lib')
+    image = dataz.find("meta",{"property":"og:image"})["content"]
+    link=dataz.find("meta", {"property":"og:url"})["content"]
+    baca = dataz.find('div', class_="verse-wrapper ml1 mr1 mt4 mb4")
     tesk = baca.findAll('p')
     return {
         'result':{
@@ -732,7 +793,8 @@ def ttlogo():
                 text1 = request.args.get('text1')
                 text2 = request.args.get('text2')
                 res = scr.glitch('', text1, text2)
-                r = requests.get(res)
+                sc = cloudscraper.create_scraper()
+                r = sc.get(res)
                 with open('img/TiktokGlitch.jpg', 'wb') as f:
                     f.write(r.content)
                 return send_file('img/TiktokGlitch.jpg')
@@ -765,7 +827,8 @@ def fml():
     }
 
 def alkitabcari(q):
-    dataz,dataa=h.bs('https://www.bible.com/id/search/bible?q='+quote(q)),[]
+    scraper = cloudscraper.create_scraper()
+    dataz,dataa=bs(scraper.get('https://www.bible.com/id/search/bible?q='+quote(q)).text, 'html.parser'),[]
     for wildan in dataz.findAll("li", {"class": "reference"}):
         ayat=wildan.a.text
         link="https://bible.com"+wildan.a.get("href")
@@ -1383,15 +1446,25 @@ def neon_light():
 def tiktok_wm():
     if request.args.get('url'):
         try:
-            scraper = cloudscraper.create_scraper()
             url = request.args.get('url')
-            be = bs(requests.post('https://www.tiktokdownloader.org/', data={'url': url}).text, 'html.parser')
-            link = be.find('a', class_='ddd')['href']
-            r = requests.get('https://www.tiktokdownloader.org/'+link)
-            print(link)
-            with open('vid/tiktok.mp4', 'wb') as f:
-                f.write(r.content)
-            return send_file('vid/tiktok.mp4')
+            s = requests.Session()
+            base = bs(s.get(
+                url='https://ttdownloader.com/',
+                ).text, 'html.parser')
+
+            token = base.find('input', id='token')['value']
+            ajax = bs(s.post(
+                url='https://ttdownloader.com/ajax/',
+                headers={
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0'
+                },
+                data=dict(
+                    url=url,
+                    format="",
+                    token=token)
+                ).text, 'html.parser')
+            result = ajax.find('a', class_='download-link')['href']
+            return {'result': result}
         except Exception as e:
             print(e)
             return {
@@ -3985,16 +4058,6 @@ def apk_pure():
         return jsonify("MASUKKAN PARAMETER q!")
 
 #BELLOW
-@app.route('/api/quotesnime/random', methods=['GET','POST'])
-def quotesnimerandom():
-    quotesnime = get('https://animechanapi.xyz/api/quotes/random').json()['data'][0]
-    print(quotesnime)
-    return {
-        'status': 200,
-        'data': {
-            'quote': quotesnime['quote']
-        }
-    }
 @app.route('/api', methods=['GET','POST'])
 def api():
     return render_template('api_s.html')
@@ -4011,28 +4074,11 @@ def google():
 def error(e):
     return render_template('error_req.html'), 404
 
-tts_dir = 'tts'
-file_dir = 'file'
-def delete_files(dir):
-    for f in os.listdir(dir):
-        os.remove(f)
-        print('deleted!')
-
-tts_file_count = len([name for name in os.listdir(tts_dir) if os.path.isfile(os.path.join(tts_dir, name))])
-file_temp = len([name for name in os.listdir(file_dir) if os.path.isfile(os.path.join(file_dir, name))])
-print(file_temp)
-if (tts_file_count == 10):
-    try:
-        delete_files(tts_dir)
-    except OSError:
-        pass
-elif (file_temp == 10):
-    try:
-        delete_files(file_dir)
-    except OSError:
-        pass
-else:
-    pass
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT','5000')),debug=True)
+    try:
+        os.environ['deployed']
+        print('STATUS : APP DEPLOYED')
+        app.run(host='0.0.0.0', port=int(os.environ.get('PORT','5000')),debug=False)
+    except KeyError:
+        print('STATUS : APP NOT DEPLOYED')
+        app.run(host='0.0.0.0', port=int(os.environ.get('PORT','5000')),debug=True)
