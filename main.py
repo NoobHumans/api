@@ -117,13 +117,13 @@ def add_total_hit():
 def log_the_status_code(response):
     status_as_integer = response.status_code
     rule = request.url_rule
-    if '/api/' in rule.rule:
-        if response.status_code == 200:
-            try:
-                add_total_hit()
-            except Exception:
-                pass
 
+    try:
+        if '/api/' in rule.rule:
+            if response.status_code == 200:
+                add_total_hit()
+    except:
+        pass
     return response
 
 @app.route('/api/spamcall', methods=['GET','POST'])
