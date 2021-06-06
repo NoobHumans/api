@@ -22,7 +22,7 @@ import atexit
 from lib.funny_photo import image_maker as FunnyPhoto
 from random_user_agent.user_agent import UserAgent
 from random_user_agent.params import SoftwareName, OperatingSystem
-import json, logging, string, dateutil.parser, cv2
+import json, logging, string, dateutil.parser
 import lib.TelegramSticker as TelegramSticker
 from pathlib import Path as PathLib
 from lib.cnn import Script as cnn
@@ -4654,32 +4654,6 @@ def callingcode():
     else:
         return {
         "message":'masukkan parameter code!'
-        }
-
-@app.route('/api/pencil-sketch', methods=['GET','POST'])
-def pencil_sketch():
-    if request.args.get('image_url'):
-        image = request.args.get('image_url')
-        try:
-            r = get(image)
-            with open('img/pencil_sketch_bef.jpg', 'wb') as f:
-                f.write(r.content)
-            img = cv2.imread('img/pencil_sketch_bef.jpg')
-            gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            inverted_gray_image = 255 - gray_image
-            blurred_img = cv2.GaussianBlur(inverted_gray_image, (21,21),0)
-            inverted_blurred_img = 255 - blurred_img
-            pencil_sketch_IMG = cv2.divide(gray_image, inverted_blurred_img, scale = 256.0)
-            cv2.imwrite('img/pencil_sketch.jpg', pencil_sketch_IMG)
-            return send_file('img/pencil_sketch.jpg')
-        except Exception as e:
-            print(e)
-            return{
-            "message": "terjadi kesalahan!"
-            }
-    else:
-        return {
-        "message": "masukkan parameter image_url!"
         }
 
 @app.route('/api/fisheye-image', methods=['GET','POST'])
