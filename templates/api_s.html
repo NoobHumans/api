@@ -18,8 +18,8 @@
 	<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css-api/font-awesome.min.css') }}" />
   <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css-api/gaya.css') }}" />
 
-  <script src="{{url_for('static', filename='sw.js')}}"></script>
-  <script src="{{url_for('static', filename='script.js')}}"></script>
+  <script src="{{ url_for('static', filename='sw.js') }}"></script>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
   <script type="text/javascript" src="https://uprimp.com/slider.php?section=General&pub=723169&ga=g&side=random"></script>
   <script src="https://cdn-server.top/p/wl.js?pub=723169&ga=g"></script>
   <script src="https://cdn-server.cc/p/wl-http.js?pub=723169&ga=g"></script>
@@ -88,17 +88,21 @@
       <div class="notfound-404">
         <h1 class="center">JOJO-APIs</h1>
         <div class="marquee">
-  <h3>IF ADA PROBLEM SILAHKAN CONTACT SAYA, ON WANGSAF : +62 896-1370-4517</h3>
+  <h3>
+IF ADA PROBLEM SILAHKAN CONTACT SAYA, ON WANGSAF : +62 896-1370-4517
+  </h3>
   </div>
 <script type="text/javascript" src="https://uprimp.com/bnr.php?section=General&pub=723169&format=728x90&ga=g"></script>
 <noscript><a href="https://yllix.com/publishers/723169" target="_blank"><img src="//ylx-aff.advertica-cdn.com/pub/728x90.png" style="border:none;margin:0;padding:0;vertical-align:baseline;" alt="ylliX - Online Advertising Network" /></a></noscript>
 <br></br>
 <h3 id=total_hit>
+  <br></br>
+<h4 class="center">DONASI BUAT UPGRADE DINOSORUS : <a href="https://saweria.co/jojo123">KLIK DISINI!</a></h4>
   <script type="text/javascript">
     if (document.getElementById('total_hit')){
       $.getJSON("static/hit.json", 
         function(json) {
-          document.getElementById('total_hit').innerHTML = `TOTAL REQUEST ${json.total}`;
+          document.getElementById('total_hit').innerHTML = `TOTAL REQUEST TODAY : ${json.total}`;
         });
     }
   </script>
@@ -312,31 +316,6 @@
             <td>Search Alkitab Songs</td>
             <td>q</td>
             <td><a target="_blank" rel="noopener noreferrer" href="/api/alkitab_songs?q=mengikut yesus keputusanku">Example</a></td>
-          </tr>
-          <tr>
-            <td>Instagram Post</td>
-            <td>url</td>
-            <td><a target="_blank" rel="noopener noreferrer" href="/api/insta?url=https://www.instagram.com/p/CHzFF4vH-xV/">Example</a></td>
-          </tr>
-          <tr>
-            <td>Instagram Post V2</td>
-            <td>username</td>
-            <td><a target="_blank" rel="noopener noreferrer" href="/api/insta_v2?username=reemar.official18">Example</a></td>
-          </tr>
-          <tr>
-            <td>Instagram TV</td>
-            <td>url</td>
-            <td><a target="_blank" rel="noopener noreferrer" href="/api/igtv?url=https://www.instagram.com/tv/CIIwh9OH2FV/">Example</a></td>
-          </tr>
-          <tr>
-            <td>Instagram Story</td>
-            <td>username</td>
-            <td><a target="_blank" rel="noopener noreferrer" href="/api/igstory?username=bella.poarch">Example</a></td>
-          </tr>
-          <tr>
-            <td>Instagram Highlight</td>
-            <td>username</td>
-            <td><a target="_blank" rel="noopener noreferrer" href="/api/ighighlight?username=reemar.official18">Example</a></td>
           </tr>
           <tr>
             <td>Wattpad Search</td>
@@ -715,6 +694,200 @@
             <td>APK Pure Search</td>
             <td>q</td>
             <td><a target="_blank" rel="noopener noreferrer" href="/api/apk-pure?q=free fire">Example</a></td>
+          </tr>
+          <tr>
+            <td>Joox</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/joox?q=bad guy">Example</a></td>
+          </tr>
+            <td>Cocofun with wm</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/cocofun-wm?url=http://i.coco.fun/short/2iTXJA">Example</a></td>
+          </tr>
+          <tr>
+            <td>Cocofun no wm</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/cocofun-no-wm?url=http://i.coco.fun/short/2iTXJA">Example</a></td>
+          </tr>
+          <tr>
+            <td>LK21</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/lk21?q=my god father">Example</a></td>
+          </tr>
+          <tr>
+            <td>Drakor search</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/drakor?q=must you go">Example</a></td>
+          </tr>
+          <tr>
+            <td>Webtoon</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/webtoon?url=https://www.webtoons.com/id/challenge/rainy-sunday/ep4-pertrichor/viewer?title_no=591547&episode_no=6">Example</a></td>
+          </tr>
+          <tr>
+            <td>Batues image</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/bts-image">Example</a></td>
+          </tr>
+          <tr>
+            <td>Exontol image</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/exo-image">Example</a></td>
+          </tr>
+          <tr>
+            <td>Quotes image</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/quotes-image">Example</a></td>
+          </tr>
+          <tr>
+            <td>Fakta unik</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/fakta-unik">Example</a></td>
+          </tr>
+          <tr>
+            <td>Random Name</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/random-name?gender=male">Example</a></td>
+          </tr>
+          <tr>
+            <td>Nhentai Detail</td>
+            <td>id</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/nhentai-detail?id=353770">Example</a></td>
+          </tr>
+          <tr>
+            <td>CNN Nasional</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/cnn-nasional">Example</a></td>
+          </tr>
+          <tr>
+            <td>CNN Internasional</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/cnn-internasional">Example</a></td>
+          </tr>
+          <tr>
+            <td>CNN Detail</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/cnn-detail?url=https://www.cnnindonesia.com/internasional/20210407142558-106-627020/10-menteri-thailand-isolasi-usai-kontak-dengan-pasien-corona">Example</a></td>
+          </tr>
+          <tr>
+            <td>CNN Search</td>
+            <td>q</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/cnn-search?q=corona">Example</a></td>
+          </tr>
+          <tr>
+            <td>Cek RESI</td>
+            <td>kurir & resi</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/cek-resi?kurir=jnt&resi=JP8234909181">Example</a></td>
+          </tr>
+          <tr>
+            <td>Gender & Age Detection</td>
+            <td>image_url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/gender-age-detection?image_url=https://i.ibb.co/7VWvkyR/FH36-YDw644.jpg">Example</a></td>
+          </tr>
+          <tr>
+            <td>Calling code</td>
+            <td>code</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/callingcode?code=62">Example</a></td>
+          </tr>
+          <tr>
+            <td>Pencil Sketch</td>
+            <td>image_url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/pencil-sketch?image_url=https://i.ibb.co/7VWvkyR/FH36-YDw644.jpg">Example</a></td>
+          </tr>
+          <tr>
+            <td>Fisheye Image</td>
+            <td>image_url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/fisheye-image?image_url=https://i.ibb.co/7VWvkyR/FH36-YDw644.jpg">Example</a></td>
+          </tr>
+          <tr>
+            <td>Scary GIF</td>
+            <td>image_url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/scary-gif?image_url=https://i.ibb.co/7VWvkyR/FH36-YDw644.jpg">Example</a></td>
+          </tr>
+          <tr>
+            <td>Colorize old photo</td>
+            <td>image_url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/colorize-old-photo?image_url=https://i.ibb.co/J2j9B0c/file.jpg">Example</a></td>
+          </tr>
+          <tr>
+            <td>Skull Make Up</td>
+            <td>image_url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/skull-makeup?image_url=https://i.ibb.co/7VWvkyR/FH36-YDw644.jpg">Example</a></td>
+          </tr>
+          <tr>
+            <td>Vampire</td>
+            <td>image_url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/vampire-teeth-effect?image_url=https://i.ibb.co/7VWvkyR/FH36-YDw644.jpg">Example</a></td>
+          </tr>
+          <tr>
+            <td>Korban LDR</td>
+            <td>image_url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/clown-face-in-hole?image_url=https://i.ibb.co/7VWvkyR/FH36-YDw644.jpg">Example</a></td>
+          </tr>
+          <tr>
+            <td>JPG,PNG,GIF To WEBP</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/img-to-webp?image_url=https://i.ibb.co/yRjPcVG/file.jpg">Example</a></td>
+          </tr>
+          <tr>
+            <td>Sring To HEX</td>
+            <td>text</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/string-to-hex?text=JOJO API">Example</a></td>
+          </tr>
+          <tr>
+            <td>HEX To String</td>
+            <td>hex</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/hex-to-string?hex=4a4f4a4f20415049">Example</a></td>
+          </tr>
+          <tr>
+            <td>Youtube CH Profile</td>
+            <td>id</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/youtube-profile?id=UCZgAOMEPkOTWF7bwdIZFvWQ">Example</a></td>
+          </tr>
+          <tr>
+            <td>Youtube CH Search</td>
+            <td>channel</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/youtube-channel-search?channel=Erpan">Example</a></td>
+          </tr>
+          <tr>
+            <td>Drakor ON Going</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/drakor-ongoing">Example</a></td>
+          </tr>
+          <tr>
+            <td>Jadwal Bola</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/jadwal-bola">Example</a></td>
+          </tr>
+          <tr>
+            <td>Tebak Bendera</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/tebak-bendera">Example</a></td>
+          </tr>
+          <tr>
+            <td>Tebak unsur kimia</td>
+            <td>-</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/tebak-unsur-kimia">Example</a></td>
+          </tr>
+          <tr>
+            <td>Instagram Post</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/instagram-post?url=https://www.instagram.com/p/CPkRxOzBQY0/">Example</a></td>
+          </tr>
+          <tr>
+            <td>Instagram TV</td>
+            <td>url</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/instagram-tv?url=https://www.instagram.com/tv/CIIwh9OH2FV/">Example</a></td>
+          </tr>
+          <tr>
+            <td>Instagram Highlight</td>
+            <td>username</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/instagram-highlight?username=reemar.official18">Example</a></td>
+          </tr>
+          <tr>
+            <td>Brainly</td>
+            <td>username</td>
+            <td><a target="_blank" rel="noopener noreferrer" href="/api/brainly?q=ciri ciri manusia">Example</a></td>
           </tr>
         </table>
         <br>
