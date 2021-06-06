@@ -18,6 +18,14 @@ from werkzeug.utils import secure_filename
 from PIL import Image, ImageFile
 import os, math, json, random, re, html_text, base64, time, smtplib, pickle, cloudscraper, io, requests, qrcode, string, tempfile
 from flask_ipban import IpBan
+import atexit
+from lib.funny_photo import image_maker as FunnyPhoto
+from random_user_agent.user_agent import UserAgent
+from random_user_agent.params import SoftwareName, OperatingSystem
+import json, logging, string, dateutil.parser, cv2
+import lib.TelegramSticker as TelegramSticker
+from pathlib import Path as PathLib
+from lib.cnn import Script as cnn
 
 
 ua_ig = 'Mozilla/5.0 (Linux; Android 9; SM-A102U Build/PPR1.180610.011; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/74.0.3729.136 Mobile Safari/537.36 Instagram 155.0.0.37.107 Android (28/9; 320dpi; 720x1468; samsung; SM-A102U; a10e; exynos7885; en_US; 239490550)'
@@ -103,6 +111,13 @@ def ig_header():
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0"
     }
     return result
+
+def random_user_agent():
+    software_names = [SoftwareName.CHROME.value, SoftwareName.FIREFOX.value, SoftwareName.OPERA.value, SoftwareName.FACEBOOK_APP.value, SoftwareName.YANDEX.value, SoftwareName.SAFARI.value, SoftwareName.SAMSUNG_BROWSER.value]
+    operating_systems = [OperatingSystem.WINDOWS.value, OperatingSystem.LINUX.value, OperatingSystem.ANDROID.value, OperatingSystem.MACOS.value, OperatingSystem.MAC_OS_X.value, OperatingSystem.RIM_TABLET_OS.value, OperatingSystem.MAC.value, OperatingSystem.UNIX.value]
+    user_agent_rotator = UserAgent(software_names=software_names, operating_systems=operating_systems, limit=1512)
+    user_agent = user_agent_rotator.get_random_user_agent()
+    return user_agent
 
 def add_total_hit():
     try:
@@ -1271,28 +1286,6 @@ def prbahasa():
             'result': 'masukkan parameter q!'
         }
 
-def getComicWebtoon(linkepisode):
-    webtun,comics=h.bs(linkepisode),{"size":0,"c":[]},1,0
-    images=webtun.find("div",{"id":"_imageList"})
-    for comic in images.findAll("img"):
-        image=comic.get("data-url").replace("webtoo","swebtoo")
-        comics["c"].append(
-            {
-                'img': image
-            })
-    return comics
-
-@app.route('/api/webtoon', methods=['GET','POST'])
-def weptun():
-    if request.args.get('url'):
-        url = request.args.get('url')
-        return{
-            'result': getComicWebtoon(url)
-        }
-    else:
-        return{
-            'result': 'Masukkan parameter url!'
-        }
 
 @app.route('/api/randomquotes', methods=['GET','POST'])
 def quotes():
@@ -3130,53 +3123,6 @@ def toonify():
             'result': 'masukkan parameter image_url'
         }
 
-@app.route('/api/brainly', methods=['GET','POST'])
-def brainly():
-    if request.args.get('q'):
-        try:
-            q = request.args.get('q')
-            scraper = cloudscraper.create_scraper()
-            f = scraper.get('https://rest.farzain.com/api/brainly.php?id='+q+'&apikey=rambu').json()
-            headers = requests.utils.default_headers()
-            headers.update({
-                'user-agent': 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.146 Safari/537.36',
-                'cookie': '__cfduid=d9d5840ba8b47a85e69a9b8811f11bd531612420017; _ga=GA1.3.492770082.1612420063; _hjid=2f0d1993-d9d8-4f64-9c24-f908e149238a; cf_chl_prog=a17; cf_clearance=4692728ef5db194c8494f64c8aa643b4c336e724-1612509394-0-250; _gid=GA1.3.2093313000.1612509395; _hjIncludedInSessionSample=1; _hjAbsoluteSessionInProgress=0; hl=id; experimentId=edb7372c70a30304c724178ef84e97e496166ab08ec3a4f92b77fce5d6934720; Zadanepl_cookie[Token][Guest]=b356a3f10118e49b4721e9f53c1dd9fa9e910c07467c4050ce6ea201bc588ea841f7360bf6b1b168; _pbjs_userid_consent_data=3524755945110770; _pubcid=2e0a05fe-dc07-49d9-944d-a29b7a103967; Zadanepl_cookie[infobar]=; _lr_geo_location=SG; _lr_retry_request=true; pbjs-unifiedid={"TDID":"f6c4ade3-d740-4976-b984-1a7d9a532e5d","TDID_LOOKUP":"TRUE","TDID_CREATED_AT":"2021-01-05T07:16:41"}; inHouseAds=JTdCJTIydG9wbGF5ZXJfcmVnaXN0cmF0aW9uJTIyJTNBJTVCMTYxMjUwOTQwNSU1RCU3RA==; __gads=ID=0fb8eb58caa25eb5:T=1612509407:S=ALNI_MbZbP70OQQDtj_0zy1g_EuJo39H6w; cto_bidid=vYi3B19DUUZYRk1FTGcwWiUyQlBIZkYzRGJWaHpxRmVXTzRpQmM2S0dFZDNMcHY4WiUyQnVNbzlUYTF6VnJRblhNeVhWT09KZjNLcmtaZ2ZLYjh5SDV6MDF1cEVYJTJCeWJkS3l3OUtiRHNIYUhEJTJGZVZZam9vJTNE; cto_bundle=YHc-RV9pJTJCOWZWN3ZNVnc3NXBXN2duaFRiU2VWVktyUGNzUW5uM20lMkI2TnglMkZrWTJDVFBFVTM1ZHFGJTJGSTZna0ptNzZKZCUyQlRkakNEenRNeFVDOEsyeWN5JTJCaXprdmszUWVzJTJCJTJGZjNuU0JXanVXWCUyRnM0em1zSHlQQnpnSDZwVzdRV2d5UU9VcFgyenNsJTJCR3lkanRvejdFTVV6bm9JZyUzRCUzRA; _dc_gtm_UA-43911963-1=1'
-            })
-            result = []
-            proxy = {
-                "http": "http://119.252.168.222:7676",
-                "https": "https://119.252.168.222:7676"
-            }
-            for i in f:
-                brainly = requests.get(i['url'], proxies=proxy)
-                be = bs(brainly.text, "html.parser")
-                print(be)
-                pertanyaan = be.find('span', class_='sg-text sg-text--large sg-text--bold sg-text--break-words brn-qpage-next-question-box-content__primary').text
-                jawaban = be.find('div', class_='sg-text sg-text--break-words brn-rich-content js-answer-content').text
-                d = be.find('ul', class_='brn-horizontal-list')
-                fa = d.findAll('li')
-                pelajaran = fa[1].text.replace('\n', '')
-                kelas = fa[2].text.replace('\n', '')
-                result.append({
-                    'pertanyaan': pertanyaan.replace('\n', ''),
-                    'jawaban': jawaban.replace('\n', ''),
-                    'pelajaran': pelajaran,
-                    'kelas': kelas
-                })
-            return{
-                'query': q,
-                'result': result
-            }
-        except Exception as e:
-            print(e)
-            return{
-                'result': q+' tidak di temukan!'
-            }
-    else:
-        return{
-            'result': 'masukkan parameter q!'
-        }
-
 @app.route('/api/ip_geolocation', methods=['GET','POST'])
 def ip_geolocation():
     if request.args.get('ip'):
@@ -4057,6 +4003,1611 @@ def apk_pure():
     else:
         return jsonify("MASUKKAN PARAMETER q!")
 
+@app.route('/api/joox', methods=['GET','POST'])
+def joox():
+    if request.args.get('q'):
+        try:
+            title = request.args.get('q')
+            apiURI      = "http://api.joox.com/web-fcgi-bin//web_search"
+            _time = str(time.time()).split(".")[0]
+            params_1 = {"callback":"jQuery110007680156477433364_1516238311941","lang":"en","country":"id","type":"0","search_input":title,"pn":1,"sin":"0","ein":"29","_":_time}
+            json_1       = requests.get(apiURI, params=params_1).text
+            rep = json_1.replace("jQuery110007680156477433364_1516238311941(", "").replace(")", "")
+            json__1 = json.loads(rep)
+            song_id = json__1['itemlist'][0]['songid']
+            URI     = "http://api.joox.com/web-fcgi-bin/web_get_songinfo"
+            params  = {"songid":song_id,"lang":"en","country":"id","from_type":"null","channel_id":"null","_":_time}
+            head = {"user-agent": "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36')", "cookie": "wmid=142420656; user_type=1; country=id; session_key=2a5d97d05dc8fe238150184eaf3519ad;"}
+            json_   = requests.get(URI, headers=head, params=params).text
+            rep_2 = json_.replace("MusicInfoCallback(", "").replace(")", "")  
+            response = json.loads(rep_2)
+            return jsonify(response)  
+        except Exception as e:
+            print(e)
+            return {
+            'message': title+" tidak di temukan!"
+            }
+    else:
+        return {
+        'message': 'masukkan parameter q!'
+        }
+
+@app.route('/api/ytmp4-by-title', methods=['GET','POST'])
+def yt_play_vid():
+    from youtubesearchpython import VideosSearch
+    from hurry.filesize import size
+    if request.args.get('q'):
+        try:
+            q = request.args.get('q')
+            det = VideosSearch(q, limit = 1).result()
+            id = det['result'][0]['id']
+            up = det['result'][0]['publishedTime']
+            dur = det['result'][0]['duration']
+            view = det['result'][0]['viewCount']['text']
+            ch = det['result'][0]['channel']['name']
+            link = 'https://www.youtube.com/watch?v='+id
+            yta = post('https://www.y2mate.com/mates/en60/analyze/ajax',data={'url':link,'q_auto':'0','ajax':'1'}).json()
+            yaha = bs(yta['result'], 'html.parser').findAll('td')
+            thumb = bs(yta['result'], 'html.parser').find('img')['src']
+            title = bs(yta['result'], 'html.parser').find('b').text
+            p = requests.post('https://yt1s.com/api/ajaxSearch/index', data={'q': link, 'vt': 'mp3'}).json()
+            k = p['kc']
+            i_d = p['vid']
+            p = bs(requests.get('http://vid-loader.com/file/mp4/'+id).text, 'html.parser')
+            inf = p.find('a', class_='shadow-xl bg-blue-600 text-white hover:text-gray-300 focus:text-gray-300 focus:outline-none rounded-md p-2 border-solid border-2 border-black ml-2 mb-2 w-25')
+            q = inf
+            dl = q['href']
+            filesize = p.findAll('div', class_='text-shadow-1')[2]
+            return {
+                'title': title,
+                'thumb': thumb,
+                'uploaded': up,
+                'duration': dur,
+                'total_view': view,
+                'channel': ch,
+                'filesize': filesize.text,
+                'link': dl
+            }
+        except Exception as e:
+            print(e)
+            return{
+                'status': False,
+                'result': q+' '+'Tidak di temukan'
+            }
+    else:
+        return {
+            'result' :'masukkan parameter q'
+        }
+
+@app.route('/api/spotify_search', methods=['GET','POST'])
+def spotify_search():
+    if request.args.get('q'):
+        try:
+            q = request.args.get('q')
+            url = f"https://api.spotify.com/v1/search?q={q}&type=track%2Cartist&market=US&limit=10&offset=5"
+            head = {"Accept": "application/json", "Content-Type": "application/json", "Authorization": "Bearer BQCdy_0egOiXct_3GquQO1pXj3y4_M19jQnGtw41vozDffY0TAo5VW4ZAOTvC-ezo5XVM3QcpcHzWS4PO04w_YXhsckzPeKcx_4DjvsTl48i8-YZAUO8n7G9oCtFRRB06Um3zzHH4kDEXQWQddZCyV4rEg27rQ4tOFOCCRFStd-me7Mz1dXkXGCpF5kIlvIeZEY_6tA9O7T7n1JL6bar4pQ1ARoahK-e-TnXnFRAnhHgC0nCO_gTLBwwPbbnY4WvK9BgSjQvkl26mQntM2as5MU94BNqBkQOn4sXVbEuhwIt"}
+            req = requests.get(url, headers=head).text
+            load = json.loads(req)
+            return jsonify(load)
+        except Exception as e:
+            print(e)
+            return {
+            "message": q+" tidak dapat di temukan!"
+            }
+    else:
+        return {
+        "message": "masukkan parameter q!"
+        }
+
+@app.route('/api/cocofun-wm', methods=['GET','POST'])
+def cocofun_wm():
+    if request.args.get('url'):
+        link = request.args.get('url')
+        try:
+            req_ = requests.get(link).url
+            ppid = req_.replace("http://www.ichizz.com/share/post/","").replace("?lang=id&pkg=id&share_to=copy_link&m=ab08bda7a86b872e88cec66cb32c7415&d=07ef28a31a2ac83a59a8db3472b2dc51b7a03b35bd789e5ba4e442238464a4ea&nt=4", "")
+            url = "http://www.ichizz.com/consulapi/gateway/post/share_detail"
+            json_data = {"ppid":ppid}
+            req = requests.post(url, json=json_data, headers={'user-agent': random_user_agent()}).json()
+            post_data = req['data']['post']
+            id = post_data['id']
+            id_v = post_data['imgs'][0]['id']
+            share = post_data['share']
+            tag = post_data['topic']['topic']
+            likes = post_data['likes']
+            play_count = post_data['play_count']
+            duration = post_data['videos'][str(id_v)]['dur']
+            wm = post_data['videos'][str(id_v)]['urlwm']
+            nowm = post_data['videos'][str(id_v)]['url']
+            return{
+            "id": id,
+            "share": share,
+            "hastag": tag,
+            "likes": likes,
+            "play_count": play_count,
+            "duration": duration,
+            "download": wm 
+            }
+        except Exception as e:
+            print(e)
+            return{
+            "message": "terjadi kesalahan, mungkin url tidak valid!"
+            }
+    else:
+        return {
+        "message": "masukkan parameter url!"
+        }
+
+@app.route('/api/cocofun-no-wm', methods=['GET','POST'])
+def cocofun_no_wm():
+    if request.args.get('url'):
+        link = request.args.get('url')
+        try:
+            req_ = requests.get(link).url
+            ppid = req_.replace("http://www.ichizz.com/share/post/","").replace("?lang=id&pkg=id&share_to=copy_link&m=ab08bda7a86b872e88cec66cb32c7415&d=07ef28a31a2ac83a59a8db3472b2dc51b7a03b35bd789e5ba4e442238464a4ea&nt=4", "")
+            url = "http://www.ichizz.com/consulapi/gateway/post/share_detail"
+            json_data = {"ppid":ppid}
+            req = requests.post(url, json=json_data).json()
+            post_data = req['data']['post']
+            id = post_data['id']
+            id_v = post_data['imgs'][0]['id']
+            share = post_data['share']
+            tag = post_data['topic']['topic']
+            likes = post_data['likes']
+            play_count = post_data['play_count']
+            duration = post_data['videos'][str(id_v)]['dur']
+            wm = post_data['videos'][str(id_v)]['urlwm']
+            nowm = post_data['videos'][str(id_v)]['url']
+            return{
+            "id": id,
+            "share": share,
+            "hastag": tag,
+            "likes": likes,
+            "play_count": play_count,
+            "duration": duration,
+            "download": nowm 
+            }
+        except Exception as e:
+            print(e)
+            return{
+            "message": "terjadi kesalahan, mungkin url tidak valid!"
+            }
+    else:
+        return {
+        "message": "masukkan parameter url!"
+        }
+
+def delete_telegram_sticker():
+    time.sleep(180)
+    if len(os.listdir('/home/varun/temp') ) == 0:
+        print("Directory is empty")
+    else:    
+        mydir = "file/telegram/stickers"
+        print("Directory is not empty")
+        filelist = [ f for f in os.listdir(mydir) if f.endswith(".webp") ]
+        for f in filelist:
+            os.remove(os.path.join(mydir, f))
+        print('FILE DELETED!')
+
+@app.route('/api/telegram-sticker', methods=['GET','POST'])
+def telegram_sticker():
+    if request.args.get('url'):
+        try:
+            name = request.args.get('url').replace("https://t.me/addstickers/", "")
+            json_data = TelegramSticker.getSticker(name)
+            token  = "1509501513:AAH6zWa3qKl2jJMXKj9m7KQ7ucEd4tOnsO0"
+            results = []
+            for i in json_data['result']['stickers']:
+                filename = TelegramSticker.getStickerFile(i['file_id'])
+                req = requests.get('https://api.telegram.org/file/bot{}/{}'.format(token, filename))
+                with open(f'file/telegram/{filename}', 'wb') as f:
+                    f.write(req.content)
+                path_ = filename.replace('stickers/', '')
+                results.append({"url": f'https://{request.host}/file/telegram-sticker/{path_}', "emoji": i['emoji'], "animated": i['is_animated'], "file_size": i['file_size']})
+                delete_telegram_sticker()
+            return{
+            "name": json_data['result']['name'],
+            "title": json_data['result']['title'],
+            "note": "file deleted in 3 minutes",
+            "count": len(results),
+            "result": results
+            }
+        except Exception as e:
+            print(e)
+            return{
+            "message": "terjadi kesalahan, mungkin url yang kamu kirim tidak valid!"
+            }
+    else:
+        return{
+        "message": "masukkan parameter url!"
+        }
+
+@app.route('/file/telegram-sticker/<filename>', methods=['GET','POST'])
+def telegram_file(filename):
+    try:
+        myfile = PathLib(f"file/telegram/stickers/{filename}")
+        if myfile.is_file():
+            return send_file(f"../file/telegram/stickers/{filename}")
+        else:
+            return {
+            "message": "file tidak di temukan di server!"
+            }
+    except Exception as e:
+        print(e)
+        return {
+        "message": "terjadi kesalahan!"
+        }
+
+@app.route('/api/lk21', methods=['GET','POST'])
+def lk21_():
+    if request.args.get('q'):
+        try:
+            q = request.args.get('q')
+            base_ = bs(requests.get(f"http://167.99.71.200/?s={q}&post_type%5B%5D=post&post_type%5B%5D=tv").text, 'html.parser').find('div', class_='gmr-watch-movie')
+            url = base_.find('a')['href']
+            base = bs(requests.get(url).text, 'html.parser')
+            thumb = base.find('img', class_='attachment-thumbnail size-thumbnail wp-post-image', src=True)['src']
+            title = base.find('h1', class_='entry-title').text
+            genre = base.find('span', class_='gmr-movie-genre').text.replace('Genre: ', "")
+            year = base.findAll('span', class_='gmr-movie-genre')[1].text.replace('Year: ', '')
+            duration = base.find('span', attrs={'class': 'gmr-movie-runtime', 'property': 'duration'}).text.replace('duration', '')
+            view = base.find('span', class_='gmr-movie-view').text.replace('Views: ', '')
+            base__ = base.find('div', class_='entry-content entry-content-single')
+            desc = base.find('p').text
+            actor = base__.findAll('td')[1].text
+            directors = base__.findAll('td')[3].text
+            country = base__.findAll('td')[5].text
+            release = base__.findAll('td')[7].text
+            language = base__.findAll('td')[9].text
+            download_link = base__.find('div', id="download", class_="gmr-download-wrap clearfix").find('a', attrs={'title': 'Link Download'})['href']
+            return{
+            "url": url,
+            "title": title,
+            "image": thumb,
+            "genre": genre,
+            "year": year,
+            "duration": duration,
+            "view": view,
+            "description": desc,
+            "actor": actor,
+            "directors": directors,
+            "country":country,
+            "release": release,
+            "language": language,
+            "download_link": download_link
+            }
+        except Exception as e:
+            print(e)
+            return {
+            "message": q+' tidak di temukan!'
+            }
+    else:
+        return{
+        "message":"masukkan parameter title!"
+        }
+
+@app.route('/api/drakor', methods=['GET','POST'])
+def drakor_search():
+    if request.args.get("q"):
+        title = request.args.get("q").replace(" ", '+')
+        try:
+            url = bs(requests.get(f"https://drakorasia.net/?s={title}&post_type=post").text, 'html.parser').find('div', class_='thumbnail').find('a')['href']
+            base = bs(requests.get(url).text, 'html.parser')
+            image = base.find('img', class_='w-48 rounded-md mx-auto wp-post-image')['src']
+            det = base.find('div', class_='detail lg:text-left text-center lg:w-9/12 w-full my-2')
+            years = det.find('a').text
+            title = det.find('h2', class_='font-bold text-white sm:text-2xl text-lg mb-2').text
+            genre = det.find('p', class_='gens text-sunrise text-opacity-100 text-sm font-normal mb-3').text
+            duration = det.find('span', class_='text-white font-medium text-sm text-center bg-main hover:underline py-1 rounded px-2 mr-1').text
+            cast = [i.text for i in det.find('div', class_='casts mt-2').find('p', class_='text-xs').findAll('a')]
+            synopsis = base.find('p', class_='caps').text
+            return{
+            "url": url,
+            "image": image,
+            "years": years,
+            "title": title,
+            "genre": genre,
+            "duration": duration,
+            "synopsis": synopsis,
+            "cast": cast
+            }
+        except Exception as e:
+            print(e)
+            return{
+            "message": title+' tidak di temukan!'
+            }
+    else:
+        return{
+        "message":"masukkan parameter title!"
+        }
+
+@app.route('/api/webtoon', methods=['GET','POST'])
+def webtoons():
+    if request.args.get('url'):
+        try:
+            r = requests.Session()
+            episode = request.args.get('episode_no')
+            url = request.args.get('url')+"&episode_no="+episode
+            head = {'Cookie': 'locale=id; wtv=5; wtu="YGHXKawKCf4isDTJxBu9fAAAAFk"; _ga_ZTE4EZ7DVX=GS1.1.1617137642.4.1.1617138263.0; _ga=GA1.2.347721235.1617024829; timezoneOffset=+7; _scid=5af3283c-f4ce-450b-8ba7-f03fd8d20525; _fbp=fb.1.1617024840581.1057496231; _sctr=1|1616950800000; __gads=ID=7ce78f720ce5b8ff-224360ffe2c60072:T=1617024829:S=ALNI_MaratXwkJmvx23Ch2GwTWxfOVVSCw; rw=c_591547_6%2Cw_1392_152%2Cw_2066_41; _uetvid=62e38b00909311eb8650d757f321ebbd; needGDPR=false; needCCPA=false; needCOPPA=false; _gid=GA1.2.1450928305.1617130249; JSESSIONID=3AB31D35EDDE59D56100ED9EE4D628D1; wts=1617137642194', 'Host': 'www.webtoons.com', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:87.0) Gecko/20100101 Firefox/87.0'}
+            base = bs(r.get(url, headers=head).text, 'html5lib')
+            title = base.find("meta",{"property":"og:title"}).get("content")
+            description = base.find("meta",{"property":"og:description"}).get("content")
+            author = base.find('meta',{'property':'com-linewebtoon:episode:author'}).get('content')
+            img_list = base.find('div', id='_imageList', class_='viewer_img _img_viewer_area')
+            token = bs(r.get('https://imgbb.com/upload').text, 'html.parser').find('input', attrs={'name': 'auth_token'})['value']
+            image = []
+            for i in img_list.findAll('img', class_='_images'):
+                img = i.get('data-url').replace("webtoo","swebtoo")
+                json_up = r.post('https://imgbb.com/json', data={'source':img, 'type': 'url', 'action': 'upload', 'auth_token': token}).json()
+                image.append(json_up['image']['url'])
+            return{
+            "title": title,
+            "description": description,
+            "author": author,
+            "image": image
+            }
+        except Exception as e:
+            print(e)
+            return{
+            "message": "terjadi kesalahan!,mungkin url yang kamu kirim tidak valid!"
+            }
+    else:
+        return "masukkan parameter url!"
+
+@app.route('/api/graffiti', methods=['GET','POST'])
+def grafitti_logo():
+    if request.args.get('text1'):
+        if request.args.get('text2'):
+            try:
+                text1 = request.args.get('text1')
+                text2 = request.args.get('text2')
+                scraper = cloudscraper.create_scraper()
+                url = 'https://textpro.me/create-cool-wall-graffiti-text-effect-online-1009.html'
+                gt = scraper.get(url)
+                be = bs(gt.text, 'html.parser')
+                token = be.find('input', attrs={'name': 'token'})['value']
+                build_server = be.find('input', attrs={'name': 'build_server'})['value']
+                build_server_id = be.find('input', attrs={'name': 'build_server_id'})['value']
+                time.sleep(3)
+                frs = bs(scraper.post(url, data={u'text[]': [u'%s' % text1,u'%s' % text2], 'submit': 'Go', 'token': token, 'build_server': build_server, 'build_server_id': build_server_id }).text, 'html.parser')
+                fv = frs.find('div', id='form_value').text
+                js = json.loads(fv)
+                p = scraper.post('https://textpro.me/effect/create-image', data={'id': '1009', u'text[]': [u'%s' % text1,u'%s' % text2], 'token': js['token'], 'build_server': build_server, 'build_server_id': build_server_id}).json()
+                result = build_server+p['image']
+                req = scraper.get(result)
+                with open('img/graffiti.jpg', 'wb') as f:
+                    f.write(req.content)
+                crop.crop3('', 'graffiti')
+                return send_file('img/graffiti.jpg')
+            except Exception as e:
+                print('Error : %s ' % e)
+                return {
+                    'status': False,
+                    'result': '[❗] Terjadi kesalahan'
+                    }
+        else:
+            return {
+                'status': False,
+                'result': 'Masukkan parameter text2!'
+            }
+    else:
+        return {
+            'status': False,
+            'result': 'Masukkan parameter text1!'
+        }
+
+@app.route('/api/bts-image', methods=['GET','POST'])
+def bts_image():
+    try:
+        base  = bs(requests.get(f'https://www.gettyimages.com/photos/bangtan-boys?family=editorial&page={random.randint(2, 50)}&phrase=bangtan%20boys&sort=mostpopular').text, 'html.parser')
+        append = []
+        for i in base.findAll('div', class_='gallery-mosaic-asset'):
+            try:
+                append.append({'img': i.find('img', class_='gallery-asset__thumb gallery-mosaic-asset__thumb')['src'], 'desc': i.find('img', class_='gallery-asset__thumb gallery-mosaic-asset__thumb')['alt']})
+            except Exception as e:
+                pass
+        randoms = random.choice(append)
+        return jsonify(randoms)
+    except Exception as e:
+        print(e)
+        return{
+        "message": "terjadi kesalahan!"
+        }
+
+@app.route('/api/exo-image', methods=['GET','POST'])
+def exo_image():
+    try:
+        base  = bs(requests.get(f'https://www.gettyimages.com/photos/exo-band?page={random.randint(2, 88)}&phrase=exo%20band&sort=mostpopular').text, 'html.parser')
+        append = []
+        for i in base.findAll('div', class_='gallery-mosaic-asset'):
+            try:
+                append.append({'img': i.find('img', class_='gallery-asset__thumb gallery-mosaic-asset__thumb')['src'], 'desc': i.find('img', class_='gallery-asset__thumb gallery-mosaic-asset__thumb')['alt']})
+            except Exception as e:
+                pass
+        randoms = random.choice(append)
+        return jsonify(randoms)
+    except Exception as e:
+        print(e)
+        return{
+        "message": "terjadi kesalahan!"
+        }
+
+@app.route('/api/quotes-image', methods=['GET','POST'])
+def quotes_image():
+    try:
+        base = bs(requests.get('https://www.demico.co/quote-kata-kata-bijak/').text, 'html.parser')
+        find = base.findAll('img')[random.randint(5, 200)]
+        try:
+            url = find['data-lazy-src']
+        except Exception:
+            if 'https://www.demico.co/wp-content'in find['src']:
+                url = find['src']
+            else:
+                url = 'https://www.demico.co/wp-content/uploads/2019/05/kata-bijak-kehidupan-terkadang-diam-lebih-bijak.jpg'
+        req = requests.get(url)
+        with open('img/quotes-image.jpg', 'wb') as f:
+            f.write(req.content)
+        return send_file('img/quotes-image.jpg')
+    except Exception as e:
+        print(e)
+        return{
+        "message": "terjadi kesalahan"
+        }
+
+@app.route('/api/fakta-unik', methods=['GET','POST'])
+def fakta_unik():
+    try:
+        req = requests.get('https://raw.githubusercontent.com/ArugaZ/scraper-results/main/random/faktaunix.txt').text
+        return {
+        "result": random.choice(req.split('\n'))
+        }
+    except Exception as e:
+        return{
+        "message": 'terjadi kesalahan :('
+        }
+
+@app.route('/api/random-name', methods=['GET','POST'])
+def random_name():
+    if request.args.get('gender'):
+        gender = request.args.get('gender')
+        if gender == 'male':
+            typ = 0
+        elif gender == 'female':
+            typ = 100
+        else:
+            return {
+            "message": 'male/female'
+            }
+        try:
+            data = {
+            "con[]": "id_ID",
+            "perc": typ,
+            "miny": "15",
+            "maxy": "57"
+            }
+            base = bs(requests.post("https://name-fake.com/id_ID", data=data).text, 'html.parser')
+            return{
+            "result": base.find('h2').text
+            }
+        except Exception as e:
+            print(e)
+            return{
+            "message": 'terjadi kesalahan :('
+            }
+    else:
+        return{
+        "message": "masukkan parameter gender!"
+        }
+
+@app.route('/api/nhentai-detail', methods=['GET','POST'])
+def nhentai_detail():
+    if request.args.get('id'):
+        id = request.args.get('id')
+        try:
+            req = requests.Session()
+            url = f'https://nhentai.net/g/{id}/'
+            base = bs(req.get(url).text, 'html.parser')
+            cover = 'https://external-content.duckduckgo.com/iu/?u='+base.find('img', class_='lazyload')['data-src']
+            title_romaji = base.find('h1', class_='title').text
+            title_native = base.find('h2', class_='title').text
+            tags_ = base.findAll('span', class_='tags')[2]
+            tags = []
+            for tag in tags_.findAll('a'):
+                tags.append(tag.find('span', class_='name').text)
+            artist = base.findAll('span', class_='tags')[3].find('span', class_='name').text
+            categories = base.findAll('span', class_='tags')[6].find('span', class_='name').text
+            pages = base.findAll('span', class_='tags')[7].find('span', class_='name').text
+            images = []
+            for image in range(1, int(pages)+1):
+                gallery = bs(req.get(url+f'{image}/').text, 'html.parser')
+                img_url = gallery.find('section', id='image-container').find('img')['src']
+                images.append('https://external-content.duckduckgo.com/iu/?u='+img_url)
+            return{
+    "cover": "cover",
+    "title": {
+        "title_romaji": title_romaji,
+        "title_native": title_native
+    },
+    "tags": tags,
+    "artist": artist,
+    "categories": categories,
+    "pages": pages,
+    "images": images
+}
+        except Exception as e:
+            print(e)
+            return{
+            "message": "terjadi kesalahan, mungkin code tidak valid!"
+            }
+    else:
+        return{
+        "message": "masukkan parameter id!"
+        }
+
+@app.route('/api/cnn-nasional', methods=['GET','POST'])
+def cnn_nasional():
+    return jsonify(cnn.nasional())
+
+@app.route('/api/cnn-internasional', methods=['GET','POST'])
+def cnn_internasional():
+    return jsonify(cnn.internasional())
+
+@app.route('/api/cnn-detail',methods=['GET','POST'])
+def cnn_detail():
+    if request.args.get('url'):
+        url = request.args.get('url')
+        try:
+            return jsonify(cnn.detail(url))
+        except Exception as e:
+            print(e)
+            return {
+            "message":"terjadi kesalahan, mungkin link yang kamu kirim tidak valid!"
+            }
+    else:
+        return {
+        "message": "masukkan parameter url!"
+        }
+
+@app.route('/api/cnn-search', methods=['GET','POST'])
+def cnn_search():
+    if request.args.get('q'):
+        q = request.args.get('q')
+        try:
+            return jsonify(cnn.search(q))
+        except Exception as e:
+            print(e)
+            return {
+            "message": q+' tidak di temukan!'
+            }
+    else:
+        return{
+        "message": "masukkan parameter q!"
+        }
+
+@app.route('/api/cek-resi', methods=['GET','POST'])
+def cek_resi():
+    if request.args.get('kurir'):
+        kurir = request.args.get('kurir')
+        if request.args.get('resi'):
+            resi = request.args.get('resi')
+            try:
+                req = requests.post(f'https://pluginongkoskirim.com/cek-tarif-ongkir/front/resi-amp?__amp_source_origin=https%3A%2F%2Fpluginongkoskirim.com', data={'kurir':kurir, 'resi':resi}).json()
+                return jsonify(req)
+            except Exception as e:
+                print(e)
+                return{
+                "message": "terjadi kesalahan, mungkin kurir atau resi tidak valid!"
+                }
+        else:
+            return{
+            "message": "masukkan parameter resi!"
+            }
+    else:
+        return{
+        "message": "masukkan parameter kurir!"
+        }
+
+@app.route('/api/gender-age-detection', methods=['GET','POST'])
+def gender_age_detect():
+    if request.args.get('image_url'):
+        image_url = request.args.get('image_url')
+        try:
+            r = get(image_url)
+            with open('img/age_gender.jpg', 'wb') as f:
+                f.write(r.content)
+            req1 = requests.post('https://api.facelytics.io/api/capture', headers={'api-key':'08a7c102610afb6bee0566b4829e20a10e64e79a', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:87.0) Gecko/20100101 Firefox/87.0'}, files={'image': open('img/age_gender.jpg', 'rb')}).json()
+            res = requests.get(f'https://api.facelytics.io/api/capture/{req1["capture"]}', headers={'api-key':'08a7c102610afb6bee0566b4829e20a10e64e79a', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:87.0) Gecko/20100101 Firefox/87.0'}).json()
+            if res['detections']:
+                if res['detections'][0]['gender'] == 0:
+                    gender = 'female'
+                else:
+                    gender = 'male'
+                return {
+                "gender": gender,
+                "age": res['detections'][0]['age']
+                }
+            else:
+                return {
+                "message":"tidak terdeteksi"
+                }
+        except Exception as e:
+            print(e)
+            return{
+            "message": "terjadi kesalahan"
+            }
+    else:
+        return {
+        "message": "masukkan parameter image_url!"
+        }
+
+@app.route('/api/callingcode', methods=['GET',"POST"])
+def callingcode():
+    if request.args.get('code'):
+        code = request.args.get('code')
+        try:
+            req = requests.get(f'https://restcountries.eu/rest/v2/callingcode/{code}').json()
+            return jsonify(req)
+        except Exception as e:
+            return {
+            "message": "code tidak valid!"
+            }
+    else:
+        return {
+        "message":'masukkan parameter code!'
+        }
+
+@app.route('/api/pencil-sketch', methods=['GET','POST'])
+def pencil_sketch():
+    if request.args.get('image_url'):
+        image = request.args.get('image_url')
+        try:
+            r = get(image)
+            with open('img/pencil_sketch_bef.jpg', 'wb') as f:
+                f.write(r.content)
+            img = cv2.imread('img/pencil_sketch_bef.jpg')
+            gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            inverted_gray_image = 255 - gray_image
+            blurred_img = cv2.GaussianBlur(inverted_gray_image, (21,21),0)
+            inverted_blurred_img = 255 - blurred_img
+            pencil_sketch_IMG = cv2.divide(gray_image, inverted_blurred_img, scale = 256.0)
+            cv2.imwrite('img/pencil_sketch.jpg', pencil_sketch_IMG)
+            return send_file('img/pencil_sketch.jpg')
+        except Exception as e:
+            print(e)
+            return{
+            "message": "terjadi kesalahan!"
+            }
+    else:
+        return {
+        "message": "masukkan parameter image_url!"
+        }
+
+@app.route('/api/fisheye-image', methods=['GET','POST'])
+def wasted_image():
+    if request.args.get('image_url'):
+        image = request.args.get('image_url')
+        try:
+            url = "https://www4.lunapic.com/editor/?action=fisheye"
+
+            headers_ = {
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Cookie': 'srv=www4.lunapic.com; acolor=%23f44336; winw=1366; _ga=GA1.2.1087176901.1617988029; _gid=GA1.2.1940163283.1617988029; ucount=3; hide_backups=1; __gads=ID=41e1084f2c97e0f0:T=1617989314:S=ALNI_MaIT7k54w4bFCDdcKAF8WmIxi-YLw; icon_id=161798807777174807; backupid=0',
+                'Host': 'www4.lunapic.com',
+                'Origin': 'https://www4.lunapic.com',
+                'Referer': 'https://www4.lunapic.com/editor/?action=fisheye',
+                'Upgrade-Insecure-Requests': "1",
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.0 Safari/537.36'
+            }
+            param = urlencode({
+                "action": "fisheye"
+            })
+
+            data_ = {
+                "action": "fisheye",
+                "url": image
+            }
+            req = requests.post(
+                url, 
+                headers=headers_,
+                data=urlencode(data_),
+                params=param,
+                allow_redirects=True
+            )
+            base = bs(req.text, 'html.parser')
+            result = base.find('img', {'alt':'Use links below to save image.'})['src']
+            r = get(result)
+            with open('img/fisheye.jpg', 'wb') as f:
+                f.write(r.content)
+            return send_file('img/fisheye.jpg')
+        except Exception as e:
+            print(e)
+            return{
+            "message": "terjadi kesalahan!"
+            }
+    else:
+        return{
+        "message": "masukkan parameter image_url!"
+        }
+
+@app.route('/api/scary-gif', methods=['GET','POST'])
+def scrary_image():
+    if request.args.get('image_url'):
+        image = request.args.get('image_url')
+        try:
+            url = "https://www4.lunapic.com/editor/?action=scary"
+
+            headers_ = {
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Cookie': 'srv=www4.lunapic.com; acolor=%23f44336; winw=1366; _ga=GA1.2.1087176901.1617988029; _gid=GA1.2.1940163283.1617988029; ucount=3; hide_backups=1; __gads=ID=41e1084f2c97e0f0:T=1617989314:S=ALNI_MaIT7k54w4bFCDdcKAF8WmIxi-YLw; icon_id=161798807777174807; backupid=0',
+                'Host': 'www4.lunapic.com',
+                'Origin': 'https://www4.lunapic.com',
+                'Referer': 'https://www4.lunapic.com/editor/?action=scary',
+                'Upgrade-Insecure-Requests': "1",
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.0 Safari/537.36'
+            }
+            param = urlencode({
+                "action": "scary"
+            })
+
+            data_ = {
+                "action": "scary",
+                "url": image
+            }
+            req = requests.post(
+                url, 
+                headers=headers_,
+                data=urlencode(data_),
+                params=param,
+                allow_redirects=True
+            )
+            base = bs(req.text, 'html.parser')
+            result = base.find('img', {'alt':'Use links below to save image.'})['src']
+            r = get(result)
+            with open('img/scary.gif', 'wb') as f:
+                f.write(r.content)
+            return send_file('img/scary.gif')
+        except Exception as e:
+            print(e)
+            return{
+            "message": "terjadi kesalahan!"
+            }
+    else:
+        return{
+        "message": "masukkan parameter image_url!"
+        }
+
+@app.route('/api/colorize-old-photo', methods=['GET','POST'])
+def colorize_old_photo():
+    if request.args.get('image_url'):
+        image = request.args.get('image_url')
+        try:
+            url = "https://www4.lunapic.com/editor/?action=colorize-old-photo"
+
+            headers_ = {
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Cookie': 'srv=www4.lunapic.com; acolor=%23f44336; winw=1366; _ga=GA1.2.1087176901.1617988029; _gid=GA1.2.1940163283.1617988029; ucount=3; hide_backups=1; __gads=ID=41e1084f2c97e0f0:T=1617989314:S=ALNI_MaIT7k54w4bFCDdcKAF8WmIxi-YLw; icon_id=161798807777174807; backupid=0',
+                'Host': 'www4.lunapic.com',
+                'Origin': 'https://www4.lunapic.com',
+                'Referer': 'https://www4.lunapic.com/editor/?action=colorize-old-photo',
+                'Upgrade-Insecure-Requests': "1",
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.0 Safari/537.36'
+            }
+            param = urlencode({
+                "action": "colorize-old-photo"
+            })
+
+            data_ = {
+                "action": "colorize-old-photo",
+                "url": image
+            }
+            req = requests.post(
+                url, 
+                headers=headers_,
+                data=urlencode(data_),
+                params=param,
+                allow_redirects=True
+            )
+            base = bs(req.text, 'html.parser')
+            result = base.find('img', {'alt':'Use links below to save image.'})['src']
+            r = get(result)
+            with open('img/colorize-old-photo.jpg', 'wb') as f:
+                f.write(r.content)
+            return send_file('img/colorize-old-photo.jpg')
+        except Exception as e:
+            print(e)
+            return{
+            "message": "terjadi kesalahan!"
+            }
+    else:
+        return{
+        "message": "masukkan parameter image_url!"
+        }
+
+@app.route('/api/skull-makeup', methods=['GET','POST'])
+def skull_mask():
+    if request.args.get('image_url'):
+        image_url = request.args.get('image_url')
+        try:
+            img_result = FunnyPhoto.ver_1('skull_makeup', image_url)
+            r = get(img_result)
+            with open('img/skull-makeup.jpg', 'wb') as f:
+                f.write(r.content)
+            return send_file('img/skull-makeup.jpg')
+        except Exception as e:
+            print(e)
+            return {
+            "message": "terjadi kesalahan, wajah tidak terdeteksi!"
+            }
+    else:
+        return{
+        "message": "masukkan parameter image_url!"
+        }
+
+@app.route('/api/vampire-teeth-effect', methods=['GET','POST'])
+def vampire_teeth_effect():
+    if request.args.get('image_url'):
+        image_url = request.args.get('image_url')
+        try:
+            img_result = FunnyPhoto.ver_1('vampire', image_url)
+            r = get(img_result)
+            with open('img/vampire-teeth-effect.jpg', 'wb') as f:
+                f.write(r.content)
+            return send_file('img/vampire-teeth-effect.jpg')
+        except Exception as e:
+            print(e)
+            return {
+            "message": "terjadi kesalahan, wajah tidak terdeteksi!"
+            }
+    else:
+        return{
+        "message": "masukkan parameter image_url!"
+        }
+
+@app.route('/api/clown-face-in-hole', methods=['GET','POST'])
+def clown_face_in_hole():
+    if request.args.get('image_url'):
+        image_url = request.args.get('image_url')
+        try:
+            img_result = FunnyPhoto.ver_1('clown_face_in_hole', image_url)
+            r = get(img_result)
+            with open('img/clown_face_in_hole.jpg', 'wb') as f:
+                f.write(r.content)
+            return send_file('img/clown_face_in_hole.jpg')
+        except Exception as e:
+            print(e)
+            return {
+            "message": "terjadi kesalahan, wajah tidak terdeteksi!"
+            }
+    else:
+        return{
+        "message": "masukkan parameter image_url!"
+        }
+
+@app.route('/api/img-to-webp', methods=['GET','POST'])
+def img_to_webp():
+    if request.args.get('image_url'):
+        image_url = request.args.get('image_url')
+        try:
+            header = {'user-agent': random_user_agent()}
+            r = cloudscraper.create_scraper()
+            image = r.get(image_url).headers
+            img_type = image['Content-Type']
+            if img_type == 'image/jpeg':
+                image_type = 'jpg'
+            elif img_type == 'image/png':
+                image_type = 'png'
+            elif img_type == 'image/gif':
+                image_type = 'gif'
+            else:
+                return { "message": "hanya support png,jpg & gif!" }
+
+            base = bs(r.get(
+                url=f'https://ezgif.com/{image_type}-to-webp',
+                headers=header
+                ).text, 'html.parser')
+            server = base.find('link', {'rel':'dns-prefetch'}).get('href')
+            server_num = str(server).replace('//im', '').replace('.ezgif.com', '').replace('//s', '')
+            post_ = r.post(f'https:{server}/{image_type}-to-webp', data={'new-image': '', 'new-image-url': image_url})
+            res = bs(post_.text, 'html.parser')
+            png = res.find('img', id='target')['src']
+            i_d = png.replace(f'//im{server_num}.ezgif.com/tmp/ezgif-{server_num}-', '').replace(f'.{image_type}', '')
+            url = res.find('a', class_=f'm-btn-{image_type}-to-webp active')['href']
+            token = bs(r.get(url).text, 'html.parser').find('input', attrs={'name': 'token'})['value']
+            webp = bs(r.post(f'https://s{server_num}.ezgif.com/{image_type}-to-webp/ezgif-{server_num}-'+i_d+f'.{image_type}?ajax=true', data={'file': f'ezgif-{server_num}-'+i_d+f'.{image_type}', 'token': token}).text, 'html.parser')
+            webp_file = webp.find('img')['src']
+            result = 'https:'+webp_file
+            return {
+            'result': shortener(result)
+            }
+        except Exception as e:
+            print(e)
+            return {
+            "message": "terjadi kesalahan!"
+            }
+    else:
+        return {
+        "message": "masukkan parameter image_url!"
+        }
+
+
+@app.route('/api/webp-to-img', methods=['GET','POST'])
+def webp_to_img():
+    if request.args.get('image_url'):
+        image_url = request.args.get('image_url')
+        if not request.args.get('to'):
+            return {
+            "message":"masukkan parameter to!"
+            }
+        try:
+            header = {'user-agent': random_user_agent()}
+            r = cloudscraper.create_scraper()
+            image_type = request.args.get('to')
+            base = bs(r.get(
+                url=f'https://ezgif.com/webp-to-{image_type}',
+                headers=header
+                ).text, 'html.parser')
+            server = base.find('link', {'rel':'dns-prefetch'}).get('href')
+            server_num = str(server).replace('//im', '').replace('.ezgif.com', '').replace('//s', '')
+            post_ = r.post(f'https:{server}/webp-to-{image_type}', data={'new-image': '', 'new-image-url': image_url})
+            res = bs(post_.text, 'html.parser')
+            png = res.find('img', id='target')['src']
+            i_d = png.replace(f'//im{server_num}.ezgif.com/tmp/ezgif-{server_num}-', '').replace('.webp', '')
+            url = res.find('a', class_=f'm-btn-webp-to-{image_type} active')['href']
+            token = bs(r.get(url).text, 'html.parser').find('input', attrs={'name': 'token'})['value']
+            percentage = res.find('input', id='percentage')['value']
+            background = res.find('input', {'name': 'background'})['value']
+            webp = bs(r.post(f'https://s{server_num}.ezgif.com/webp-to-{image_type}/ezgif-{server_num}-'+i_d+'.webp?ajax=true', data={'file': f'ezgif-{server_num}-'+i_d+'.webp', 'token': token, 'percentage': percentage, 'background': background}).text, 'html.parser')
+            webp_file = webp.find('img')['src']
+            result = 'https:'+webp_file
+            return {
+            'result': result
+            }
+        except Exception as e:
+            print(e)
+            return {
+            "message": "terjadi kesalahan!"
+            }
+    else:
+        return {
+        "message": "masukkan parameter image_url!"
+        }
+
+@app.route('/api/string-to-hex', methods=['GET','POST'])
+def sting_to_hex():
+    if request.args.get('text'):
+        text = request.args.get('text')
+        return {'result': str(text).encode("utf-8").hex() }
+    else:
+        return {'message': 'masukkan parameter text!'}
+
+@app.route('/api/hex-to-string', methods=['GET','POST'])
+def hex_to_string():
+    if request.args.get('hex'):
+        hex_ = request.args.get('hex')
+        try:
+            result = bytes.fromhex(str(hex_)).decode('utf-8')
+            return {'result': result}
+        except Exception as e:
+            print(e)
+            return {'message': 'terjadi kesalahan!'}
+    else:
+        return {'message': 'masukkan paramater hex!'}
+
+@app.route('/api/img2pdf', methods=['GET','POST'])
+def img_to_pdf():
+    if request.args.get('image_url'):
+        image_url = request.args.get('image_url')
+        try:
+            with open('img/img2pdf.jpg', 'wb') as f:
+                f.write(requests.get(image_url).content)
+            upload = requests.post(
+                url='https://filetools5.pdf24.org/client.php',
+                files={'file': open('img/img2pdf.jpg', 'rb')},
+                params={'action': 'upload'}
+            ).json()
+
+            to_pdf = requests.post(
+                url='https://filetools5.pdf24.org/client.php',
+                json={'files': upload},
+                params={'action': 'imagesToPdf'}
+            ).json()
+
+            get_status = requests.post(
+                url='https://filetools5.pdf24.org/client.php',
+                params=dict(action='getStatus', jobId=to_pdf['jobId'])
+            ).json()
+
+            result = 'https://filetools5.pdf24.org/client.php?mode=download&action=downloadJobResult&jobId='+get_status['jobId']
+            return {'result': shortener(result)}
+        except Exception as e:
+            print(e)
+            return {"message":"terjadi kesalahan!"}
+    else:
+        return{
+        "message": "masukkan parameter image_url!"
+        }
+
+@app.route('/api/youtube-profile', methods=['GET','POST'])
+def youtube_profile():
+    if request.args.get('id'):
+        id_ = request.args.get('id')
+        r = cloudscraper.create_scraper()
+        if len(id_) == 24:
+            url = f'https://socialblade.com/youtube/channel/{id_}'
+        else:
+            url = f'https://socialblade.com/youtube/c/{id_}'
+        try:
+            base = bs(r.get(
+                url=url,
+            ).text, 'html.parser')
+            name = base.find('div', id="YouTubeUserTopInfoBlockTop").find('h1').text
+            uploads = base.find('span', id="youtube-stats-header-uploads").text
+            subscribers = base.find('span', id="youtube-stats-header-subs").text
+            if subscribers == None:
+                sub = 'None'
+            else:
+                sub = subscribers
+            total_views = base.find('span', id="youtube-stats-header-views").text
+            country = base.find('span', id="youtube-stats-header-country").text
+            channel_type = base.find('span', id='youtube-stats-header-channeltype').text
+            if channel_type == None:
+                c_type = 'None'
+            else:
+                c_type = channel_type
+            created = base.findAll('div', class_='YouTubeUserTopInfo')[5].findAll('span')[1].text
+            result = dict(
+                name = name,
+                total_uploads = uploads,
+                subscribers = sub,
+                total_views = total_views,
+                country = country,
+                channel_type = c_type,
+                created = created
+                )
+            return jsonify(result)
+        except Exception as e:
+            print(e)
+            return {'message': 'id tidak valid!'}
+    else:
+        return {'message':'masukkan parameter id!'}
+
+@app.route('/api/youtube-channel-search', methods=['GET','POST'])
+def youtube_channel_search():
+    if request.args.get('channel'):
+        channel = request.args.get('channel')
+        try:
+            result = ChannelsSearch(channel).result()
+            return jsonify(result)
+        except Exception as e:
+            print(e)
+            return {'message':'tidak di temukan!'}
+    else:
+        return {'message':'masukkan parameter channel!'}
+
+@app.route('/api/drakor-ongoing', methods=['GET','POST'])
+def drakor_ongoing():
+    try:
+        base = bs(requests.get(
+            url='https://drakorasia.net/ongoing/',
+        ).text, 'html.parser').find('div', id='content-post')
+
+        result = []
+        for i in base.findAll('div', id='post'):
+            url = i.find('a')['href']
+            title = i.find('a')['title']
+            img = i.find('img', class_='w-full object-cover h-full align-middle wp-post-image')['src']
+            text_center = i.find('div', class_='title text-center absolute bottom-0 w-full py-2 pb-4 px-3').find('div', class_="category text-gray font-normal text-white text-xs truncate")
+            year = text_center.find('a').text
+            episode = str(text_center.text).replace(year, '').replace('\n', '').replace('Eps', '').replace(' ', '').replace('\t', '')
+            genre = [genre.text for genre in i.find('div', class_='genrenya text-center text-white text-opacity-75 text-xs mt-1').findAll('span')]
+            result.append(dict(
+                url = url,
+                title = title,
+                img = img,
+                year = year,
+                episode = episode,
+                genre = genre
+            ))
+        return jsonify(result)
+    except Exception as e:
+        print(e)
+        return {'message':'terjadi kesalahan!'}
+
+@app.route('/api/anime-search', methods=['GET','POST'])
+def anime_search():
+    if request.args.get('q'):
+        q = request.args.get('q')
+        try:
+            json_data = {"query":"query($page:Int = 1 $id:Int $type:MediaType $isAdult:Boolean = false $search:String $format:[MediaFormat]$status:MediaStatus $countryOfOrigin:CountryCode $source:MediaSource $season:MediaSeason $seasonYear:Int $year:String $onList:Boolean $yearLesser:FuzzyDateInt $yearGreater:FuzzyDateInt $episodeLesser:Int $episodeGreater:Int $durationLesser:Int $durationGreater:Int $chapterLesser:Int $chapterGreater:Int $volumeLesser:Int $volumeGreater:Int $licensedBy:[String]$genres:[String]$excludedGenres:[String]$tags:[String]$excludedTags:[String]$minimumTagRank:Int $sort:[MediaSort]=[POPULARITY_DESC,SCORE_DESC]){Page(page:$page,perPage:20){pageInfo{total perPage currentPage lastPage hasNextPage}media(id:$id type:$type season:$season format_in:$format status:$status countryOfOrigin:$countryOfOrigin source:$source search:$search onList:$onList seasonYear:$seasonYear startDate_like:$year startDate_lesser:$yearLesser startDate_greater:$yearGreater episodes_lesser:$episodeLesser episodes_greater:$episodeGreater duration_lesser:$durationLesser duration_greater:$durationGreater chapters_lesser:$chapterLesser chapters_greater:$chapterGreater volumes_lesser:$volumeLesser volumes_greater:$volumeGreater licensedBy_in:$licensedBy genre_in:$genres genre_not_in:$excludedGenres tag_in:$tags tag_not_in:$excludedTags minimumTagRank:$minimumTagRank sort:$sort isAdult:$isAdult){id title{userPreferred}coverImage{extraLarge large color}startDate{year month day}endDate{year month day}bannerImage season description type format status(version:2)episodes duration chapters volumes genres isAdult averageScore popularity nextAiringEpisode{airingAt timeUntilAiring episode}mediaListEntry{id status}studios(isMain:true){edges{isMain node{id name}}}}}}","variables":{"page":1,"type":"ANIME","sort":"SEARCH_MATCH","search":f"{q}"}}
+            url = 'https://graphql.anilist.co'
+            req = requests.post(url, json=json_data).json()
+            return jsonify(req['data']['page']['media'])
+        except Exception as e:
+            print(e)
+            return {'message': f'{q} tidak di temukan!'}
+    else:
+        return {'message':'masukkan parameter q!'}
+
+@app.route('/api/manga-search', methods=['GET','POST'])
+def manga_search():
+    if request.args.get('q'):
+        q = request.args.get('q')
+        try:
+            url = 'https://graphql.anilist.co'
+            json_data = dict(
+                query = 'query($page:Int = 1 $id:Int $type:MediaType $isAdult:Boolean = false $search:String $format:[MediaFormat]$status:MediaStatus $countryOfOrigin:CountryCode $source:MediaSource $season:MediaSeason $seasonYear:Int $year:String $onList:Boolean $yearLesser:FuzzyDateInt $yearGreater:FuzzyDateInt $episodeLesser:Int $episodeGreater:Int $durationLesser:Int $durationGreater:Int $chapterLesser:Int $chapterGreater:Int $volumeLesser:Int $volumeGreater:Int $licensedBy:[String]$genres:[String]$excludedGenres:[String]$tags:[String]$excludedTags:[String]$minimumTagRank:Int $sort:[MediaSort]=[POPULARITY_DESC,SCORE_DESC]){Page(page:$page,perPage:20){pageInfo{total perPage currentPage lastPage hasNextPage}media(id:$id type:$type season:$season format_in:$format status:$status countryOfOrigin:$countryOfOrigin source:$source search:$search onList:$onList seasonYear:$seasonYear startDate_like:$year startDate_lesser:$yearLesser startDate_greater:$yearGreater episodes_lesser:$episodeLesser episodes_greater:$episodeGreater duration_lesser:$durationLesser duration_greater:$durationGreater chapters_lesser:$chapterLesser chapters_greater:$chapterGreater volumes_lesser:$volumeLesser volumes_greater:$volumeGreater licensedBy_in:$licensedBy genre_in:$genres genre_not_in:$excludedGenres tag_in:$tags tag_not_in:$excludedTags minimumTagRank:$minimumTagRank sort:$sort isAdult:$isAdult){id title{userPreferred}coverImage{extraLarge large color}startDate{year month day}endDate{year month day}bannerImage season description type format status(version:2)episodes duration chapters volumes genres isAdult averageScore popularity nextAiringEpisode{airingAt timeUntilAiring episode}mediaListEntry{id status}studios(isMain:true){edges{isMain node{id name}}}}}}',
+                variables = dict(
+                    page = 1,
+                    search = q,
+                    sort = "SEARCH_MATCH",
+                    type = "MANGA"
+                    )
+                )
+            req = requests.post(url, json=json_data).json()
+            return jsonify(req['data']['page']['media'])
+        except Exception as e:
+            print(e)
+            return {'message': f'{q} tidak di temukan!'}
+    else:
+        return {'message':'masukkan parameter q!'}
+
+@app.route('/api/jadwal-bola', methods=['GET','POST'])
+def jadwal_bola():
+    try:
+        base = bs(requests.get(
+            url='https://gilabola.com/internasional/jadwal-bola-malam-ini/'
+            ).text, 'html.parser').find('table', id='tablepress-5')
+        result = []
+        for i in base.findAll('tr'):
+            td = i.findAll('td')
+            time = str(td[0]).replace('<td class="column-1">', '').replace('</td>', '').split('<br/>')
+            tanggal = time[0]
+            jam = time[1]
+            tanding = str(td[1]).replace('<td class="column-2">', '').replace('</td>', '').split('<br/>') 
+            liga = tanding[0]
+            match = tanding[1]
+            tv_channel = td[2].text
+            result.append(dict(
+                tanggal = tanggal,
+                jam = jam,
+                liga = liga,
+                match = match,
+                ch_tv = tv_channel
+                ))
+        return jsonify(result)
+    except Exception as e:
+        print(e)
+        return dict(
+            message = 'terjadi kesalahan :('
+            )
+
+@app.route('/api/tebak-bendera', methods=['GET','POST'])
+def tebak_bendera():
+    try:
+        base = bs(requests.get('https://id.piliapp.com/emoji/list/flags/').text, 'html.parser').find('div', id='list').find('table').find('tbody')
+        for i in base.findAll('tr')[5:]:
+            try:
+                img = i.find('td', class_='td-img').find('img')['data-src']
+                emoji = i.find('td', class_='td-txt').text
+                name = str(i.findAll('td')[2].text).replace('Bendera ', '')
+                res = []
+                res.append(dict(
+                    img = img,
+                    emoji = emoji,
+                    name = name
+                ))
+            except Exception:
+                pass
+        result = random.choice(res)
+        return jsonify(result)
+    except Exception as e:
+        print(e)
+        return {'message': 'terjadi kesalahan :('}
+
+@app.route('/api/tebak-unsur-kimia', methods=['GET','POST'])
+def tebak_unsur_kimia():
+    try:
+        base = bs(requests.get('https://id.wikipedia.org/wiki/Daftar_unsur_menurut_nama').text, 'html.parser')
+        table = base.find('table', attrs=dict(style="margin: 1em 1em 1em 0; background: #f9f9f9; border: 1px #aaa solid; border-collapse: collapse;"))
+        result = random.choice([dict(nama = i.find('td').text, lambang = i.findAll('td')[1].text) for i in table.findAll('tr')[1:]])
+        return jsonify(result)
+    except Exception as e:
+        print(e)
+        return {'message': 'terjadi kesalahan :('}
+
+@app.route('/api/alay-tesk', methods=['GET','POST'])
+def alay_tesk():
+    if request.args.get('text'):
+        tesk = request.args.get('text')
+        jadi = ''
+        for i in tesk:
+            ul = random.choice([
+                i.upper(), 
+                i.lower(), 
+                i.lower(), 
+                i.upper(), 
+                re.sub(r'([@#][\w-]+)|[eE]', '3', i), 
+                re.sub(r'([@#][\w-]+)|[tT]', '7', i), 
+                re.sub(r'([@#][\w-]+)|[aA]', '4', i), 
+                re.sub(r'([@#][\w-]+)|[aA]', '@', i), 
+                re.sub(r'([@#][\w-]+)|[sS]', '$', i), 
+                re.sub(r'([@#][\w-]+)|[iI]', '1', i), 
+                i.lower(), 
+                i.upper(),
+                i.lower(),
+                re.sub(r'([@#][\w-]+)|[iI]', '!', i), 
+                i.lower(), 
+                i.upper(),
+                re.sub(r'([@#][\w-]+)|[gG]', '6', i),
+                re.sub(r'([@#][\w-]+)|[sS]', '5', i),
+                re.sub(r'([@#][\w-]+)|[oO]', '0', i),
+                i.lower(), 
+                i.upper(),
+            ])        
+            jadi += ul
+        return {'result': jadi}
+    else:
+        return {'message': 'masukkan parameter text!'}
+
+@app.route('/api/instagram-post', methods=['GET','POST'])
+def instagram_post():
+    if request.args.get('url'):
+        url = request.args.get('url')
+        try:
+            if '/tv/' in url:
+                raise
+            if '?' in url:
+                add = '&__a=1'
+            else:
+                add = '?__a=1'
+            url_json = url+add
+            json_result = requests.get(url=url_json, headers=ig_header()).json()
+            type_name = json_result['graphql']['shortcode_media']['__typename']
+            if type_name == 'GraphVideo':
+                result_url = json_result['graphql']['shortcode_media']['video_url']
+                view_count = json_result['graphql']['shortcode_media']['video_view_count']
+                caption    = json_result['graphql']['shortcode_media']['edge_media_to_caption']['edges'][0]['node']['text']
+                caption_edited = json_result['graphql']['shortcode_media']['caption_is_edited']
+                owner = json_result['graphql']['shortcode_media']['owner']
+                owner_verifed = owner['is_verified']
+                owner_username = owner['username']
+                owner_name = owner['full_name']
+                video_duration = json_result['graphql']['shortcode_media']['video_duration']
+                loc = json_result['graphql']['shortcode_media']['location']
+                if loc == None:
+                    location = "null"
+                else:
+                    location = loc['name']
+                ac_caption = json_result['graphql']['shortcode_media']['accessibility_caption']
+                if not ac_caption == None:
+                    accessibility_caption = ac_caption,
+                else:
+                    accessibility_caption = "null"
+                media_url = []
+                media_url.append(dict(
+                    type = 'video',
+                    url = result_url,
+                    view_count = view_count,
+                    video_duration = video_duration,
+                    accessibility_caption = accessibility_caption
+                    ))
+                results = dict(
+                    caption = caption,
+                    caption_edited = caption_edited,
+                    owner = dict(
+                        username = owner_username,
+                        full_name = owner_name,
+                        verified = owner_verifed
+                        ),
+                    location = location,
+                    media_result = media_url
+                    )
+            elif type_name == 'GraphSidecar':
+                caption    = json_result['graphql']['shortcode_media']['edge_media_to_caption']['edges'][0]['node']['text']
+                caption_edited = json_result['graphql']['shortcode_media']['caption_is_edited']
+                owner = json_result['graphql']['shortcode_media']['owner']
+                owner_verifed = owner['is_verified']
+                owner_username = owner['username']
+                owner_name = owner['full_name']
+                loc = json_result['graphql']['shortcode_media']['location']
+                if loc == None:
+                    location = "null"
+                else:
+                    location = loc['name']
+                media = json_result['graphql']['shortcode_media']['edge_sidecar_to_children']['edges']
+                media_result = []
+                for i in media:
+                    node = i['node']
+                    type_name_ = node['__typename']
+                    if type_name_ == 'GraphVideo':
+                        result_url = node['video_url']
+                        view_count = node['video_view_count']
+                        ac_caption = node['accessibility_caption']
+                        if not ac_caption == None:
+                            accessibility_caption = ac_caption,
+                        else:
+                            accessibility_caption = "null"
+                        media_result.append(dict(
+                            type= 'video',
+                            url = result_url,
+                            view_count = view_count,
+                            accessibility_caption= accessibility_caption
+                            ))
+                    else:
+                        result_url = node['display_url']
+                        ac_caption = node['accessibility_caption']
+                        if not ac_caption == None:
+                            accessibility_caption = ac_caption,
+                        else:
+                            accessibility_caption = "null"
+                        media_result.append(dict(
+                            type='image',
+                            url= result_url,
+                            accessibility_caption = accessibility_caption
+                            ))
+                results = dict(
+                    caption = caption,
+                    caption_edited = caption_edited,
+                    owner = dict(
+                        username = owner_username,
+                        full_name = owner_name,
+                        verified = owner_verifed
+                        ),
+                    location = location,
+                    media_result = media_result
+                    )
+            else:
+                result_url = json_result['graphql']['shortcode_media']['display_url']
+                caption    = json_result['graphql']['shortcode_media']['edge_media_to_caption']['edges'][0]['node']['text']
+                caption_edited = json_result['graphql']['shortcode_media']['caption_is_edited']
+                owner = json_result['graphql']['shortcode_media']['owner']
+                owner_verifed = owner['is_verified']
+                owner_username = owner['username']
+                owner_name = owner['full_name']
+                loc = json_result['graphql']['shortcode_media']['location']
+                if loc == None:
+                    location = "null"
+                else:
+                    location = loc['name']
+                ac_caption = json_result['graphql']['shortcode_media']['accessibility_caption']
+                if not ac_caption == None:
+                    accessibility_caption = ac_caption,
+                else:
+                    accessibility_caption = "null"
+                media_result = []
+                media_result.append(dict(
+                    type = 'image',
+                    url = result_url,
+                    accessibility_caption = accessibility_caption
+                    ))
+                results = dict(
+                    caption = caption,
+                    caption_edited = caption_edited,
+                    owner = dict(
+                        username = owner_username,
+                        full_name = owner_name,
+                        verified = owner_verifed
+                        ),
+                    location = location,
+                    media_result = media_result
+                    )
+            return jsonify(results)
+        except Exception as e:
+            print(e)
+            return {'message': 'terjadi kesalahan, mungkin url tidak valid!'}
+
+    else:
+        return {'message':'masukkan parameter url!'}
+
+@app.route('/api/instagram-tv', methods=['GET','POST'])
+def instagram_tv():
+    if request.args.get('url'):
+        url = request.args.get('url')
+        try:
+            if '?' in url:
+                add = '&__a=1'
+            else:
+                add = '?__a=1'
+            url_json = url+add
+            json_result = requests.get(url=url_json, headers=ig_header()).json()
+            type_name = json_result['graphql']['shortcode_media']['__typename']
+            if type_name == 'GraphVideo':
+                result_url = json_result['graphql']['shortcode_media']['video_url']
+                view_count = json_result['graphql']['shortcode_media']['video_view_count']
+                caption    = json_result['graphql']['shortcode_media']['edge_media_to_caption']['edges'][0]['node']['text']
+                caption_edited = json_result['graphql']['shortcode_media']['caption_is_edited']
+                owner = json_result['graphql']['shortcode_media']['owner']
+                owner_verifed = owner['is_verified']
+                owner_username = owner['username']
+                owner_name = owner['full_name']
+                video_duration = json_result['graphql']['shortcode_media']['video_duration']
+                loc = json_result['graphql']['shortcode_media']['location']
+                if loc == None:
+                    location = "null"
+                else:
+                    location = loc['name']
+                ac_caption = json_result['graphql']['shortcode_media']['accessibility_caption']
+                if not ac_caption == None:
+                    accessibility_caption = ac_caption,
+                else:
+                    accessibility_caption = "null"
+                media_url = []
+                media_url.append(dict(
+                    type = 'video',
+                    url = result_url,
+                    view_count = view_count,
+                    video_duration = video_duration,
+                    accessibility_caption = accessibility_caption
+                    ))
+                results = dict(
+                    caption = caption,
+                    caption_edited = caption_edited,
+                    owner = dict(
+                        username = owner_username,
+                        full_name = owner_name,
+                        verified = owner_verifed
+                        ),
+                    location = location,
+                    media_result = media_url
+                    )
+            return jsonify(results)
+        except Exception as e:
+            print(e)
+            return {'message': 'terjadi kesalahan, mungkin url tidak valid!'}
+
+    else:
+        return {'message':'masukkan parameter url!'}
+
+@app.route('/api/instagram-highlight', methods=['GET','POST'])
+def instagram_highlight():
+    username = request.args.get('username').replace('@', '')
+    apikey = True
+    if username:
+        if apikey:
+            if True:
+                user = requests.get(url=f'https://www.instagram.com/{username}/?__a=1', headers=ig_header()).json()
+                id = user['graphql']['user']['id']
+                var = {
+                "user_id":f"{id}",
+                "include_chaining":"true",
+                "include_reel":"false",
+                "include_suggested_users":"false",
+                "include_logged_out_extras":"false",
+                "include_highlight_reels":"true",
+                "include_live_status":"true"
+                }
+                url_1 = f'https://www.instagram.com/graphql/query/?query_hash=d4d88dc1500312af6f937f7b804c68c3&variables={str(var)}'.replace("'", '"')
+                res = requests.get(url_1, headers=ig_header()).json()
+                edges = res['data']['user']['edge_highlight_reels']['edges']
+                get_data = [i['node'] for i in edges]
+                h_id = [i['id'] for i in get_data]
+                h_id_ = ""
+                for hid in h_id:
+                    if len(h_id_) == 0:
+                        h_id_ += f'highlight:{hid}'
+                    else:
+                        h_id_ += f',highlight:{hid}'
+                url_reels = f'https://i.instagram.com/api/v1/feed/reels_media/'
+                reels = requests.get(
+                    url=url_reels,
+                    params={'reel_ids': h_id_.split(',')},
+                    headers=ig_header()
+                ).text
+                print(reels)
+                items = []
+                for h in h_id:
+                    items.append({'title': reels['reels'][f'highlight:{h}']['title'], 'media': reels['reels'][f'highlight:{h}']['items']})
+
+                result = dict(
+                    count = len(items),
+                    result = items
+                )
+                return jsonify(result)
+        else:
+            return {'message': 'masukkan parameter number!'}
+    else:
+        return {'message':'masukkan parameter username!'}
+
+@app.route('/api/brainly', methods=['GET','POST'])
+def brainly():
+    if request.args.get('q'):
+        q = request.args.get('q')
+        r = cloudscraper.create_scraper()
+        try:
+            formatGraphQl = """
+query SearchQuery($query: String!, $first: Int!, $after: ID) {
+        questionSearch(query: $query, first: $first, after: $after) {
+            edges {
+                node {
+                    content
+                    created
+                    databaseId
+                    isClosed
+                    attachments{
+                        url
+                    }
+                    answers {
+                        hasVerified
+                        nodes {
+                            content
+                            attachments{
+                                url
+                            }
+                            points      
+                            created
+                            thanksCount
+                            ratesCount
+                            rating
+                        }
+                    }
+                    grade {
+                        name
+                    }
+                    subject {
+                        name
+                    }
+                }
+            }
+        }
+    }
+
+"""
+
+            json_data = dict(
+            operationName = 'SearchQuery',
+            variables = dict(
+                query = q,
+                after = None,
+                first = 10,
+                ),
+            query = formatGraphQl
+            )
+            result = []
+            base = r.post(
+                url='https://brainly.co.id/graphql/id',
+                json=json_data).json()
+
+            edges = base['data']['questionSearch']['edges']
+            n = 0
+            for i in edges:
+                node = i['node']
+                pertanyaan_ = str(node['content']).replace('<br />', '\n')
+                attachments = node['attachments']
+                nodes = node['answers']['nodes']
+                verifed = node['answers']['hasVerified']
+                jawaban = [{'verifed': verifed, 'content': bs(str(c_a['content']).replace('<br />', '\n').replace('<strong>', '').replace('</strong>', '').replace('<p>', '').replace('</p>', '\n'), 'html.parser').text, 'attachments': c_a['attachments'], 'points': c_a['points'], 'created': dateutil.parser.parse(c_a['created']).strftime('%Y-%m-%d-%H:%M'), 'thanks_count': c_a['thanksCount'], 'rates_count': c_a['ratesCount'], 'rating': c_a['rating']} for c_a in nodes]
+                datestring = node['created']
+                created = dateutil.parser.parse(datestring).strftime('%Y-%m-%d-%H:%M')
+                closed = node['isClosed']
+                grade = node['grade']['name']
+                subject = node['subject']['name']
+                question_url = f'https://brainly.co.id/tugas/{node["databaseId"]}'                
+                result.append({
+                    "question": {
+                        "content": pertanyaan_,
+                        "attachments": attachments,
+                        "verified": verifed,
+                        "grade": grade,
+                        "subject": subject,
+                        "created": created,
+                        "url": question_url
+                    },
+                    "answer": jawaban
+                })
+            return jsonify(result)
+        except Exception as e:
+            print(e)
+            return{
+                'result': q+' tidak di temukan!'
+            }
+    else:
+        return{
+            'result': 'masukkan parameter q!'
+        }
+
 #BELLOW
 @app.route('/api', methods=['GET','POST'])
 def api():
@@ -4073,6 +5624,7 @@ def google():
 @app.errorhandler(404)
 def error(e):
     return render_template('error_req.html'), 404
+
 
 if __name__ == '__main__':
     try:
