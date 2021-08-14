@@ -622,22 +622,15 @@ def tiktok_nowm():
         try:
             video_url = request.args.get('url')
             s = requests.Session()
-            get_post = bs(s.get(
-                url='https://ssstik.io/',
-            ).text, 'html.parser').find('form', class_='pure-form pure-g hide-after-request')['data-hx-post']
-            base = bs(s.post(
-                url=f'https://ssstik.io{get_post}',
-                headers={'HX-Current-URL': 'https://ssstik.io/', 'Host': 'ssstik.io', 'Origin': 'https://ssstik.io', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0'},
-                data={'id': video_url, 'locale': 'en', 'tt': '0', 'ts': '0'}
-            ).text, 'html.parser')
-            from_ = base.find('img')['alt']
-            caption = base.find('p', class_='maintext').text
-            s1 = 'https://ssstik.io'+base.find('a', class_='pure-button pure-button-primary is-center u-bl dl-button download_link without_watermark snaptik')['href']
-            s2 = base.find('a', class_='pure-button pure-button-primary is-center u-bl dl-button download_link without_watermark_direct snaptik')['href']
+            key = s.get(f'https://api.snaptik.site/video-key?video_url={video_url}').json()['data']['key']
+            details = s.get('https://api.snaptik.site/video-details-by-key', params={'key':key}).json()
+            from_ = details['data']['author']['nickname']
+            caption = details['data']['description']
+            result = details['data']['video']['no_watermark_raw']
             return{
                 "from": from_,
                 "caption": caption,
-                "download":{"server1": s1, "server2": s2}
+                "download": result
             }
         except Exception as e:
             print('Error : %s ' % e)
@@ -1439,25 +1432,18 @@ def neon_light():
 def tiktok_wm():
     if request.args.get('url'):
         try:
-            url = request.args.get('url')
+            video_url = request.args.get('url')
             s = requests.Session()
-            base = bs(s.get(
-                url='https://ttdownloader.com/',
-                ).text, 'html.parser')
-
-            token = base.find('input', id='token')['value']
-            ajax = bs(s.post(
-                url='https://ttdownloader.com/ajax/',
-                headers={
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0'
-                },
-                data=dict(
-                    url=url,
-                    format="",
-                    token=token)
-                ).text, 'html.parser')
-            result = ajax.find('a', class_='download-link')['href']
-            return {'result': result}
+            key = s.get(f'https://api.snaptik.site/video-key?video_url={video_url}').json()['data']['key']
+            details = s.get('https://api.snaptik.site/video-details-by-key', params={'key':key}).json()
+            from_ = details['data']['author']['nickname']
+            caption = details['data']['description']
+            result = 'https://api.snaptik.site/download?key='+details['data']['video']['with_watermark']+'&type=video'
+            return{
+                "from": from_,
+                "caption": caption,
+                "download": result
+            }
         except Exception as e:
             print(e)
             return {
@@ -1942,17 +1928,17 @@ def ssweb_pdf():
 def tiktok_audio():
     if request.args.get('url'):
         try:
-            link = request.args.get('url')
-            scraper = cloudscraper.create_scraper()
-            be = bs(scraper.get('https://ssstik.io/id').text, 'html.parser').find('form', class_='pure-form pure-g hide-after-request')
-            url = 'https://ssstik.io'+be['data-hx-post']
-            tt_s = be['include-vals']
-            tt = tt_s[4:36]
-            ts = tt_s[42:56]
-            posts = bs(scraper.post(url, data={'id': link, 'locale': 'id', 'tt': tt, 'ts': ts}).text, 'html.parser')
-            mp3 = 'https://ssstik.io'+posts.find('a', class_='pure-button pure-button-primary is-center u-bl dl-button download_link music')['href']
+            video_url = request.args.get('url')
+            s = requests.Session()
+            key = s.get(f'https://api.snaptik.site/video-key?video_url={video_url}').json()['data']['key']
+            details = s.get('https://api.snaptik.site/video-details-by-key', params={'key':key}).json()
+            from_ = details['data']['author']['nickname']
+            caption = details['data']['description']
+            result = 'https://api.snaptik.site/download?key='+details['data']['music']+'&type=music'
             return{
-                'result': mp3
+                "from": from_,
+                "caption": caption,
+                "download": result
             }
         except Exception as e:
             print(e)
@@ -5464,16 +5450,33 @@ def instagram_highlight():
                         h_id_ += f'highlight:{hid}'
                     else:
                         h_id_ += f',highlight:{hid}'
+
                 url_reels = f'https://i.instagram.com/api/v1/feed/reels_media/'
+                h_id_spl = h_id_.split(',')
+                for i in range(len(h_id_spl)):
+                    if i == 0:
+                        param_x = '?reel_ids='+h_id_spl[i]+'&'
+                    elif i == len(h_id_spl):
+                        param_x = 'reel_ids='+h_id_spl[i]
+                    else:
+                        param_x = 'reel_ids='+h_id_spl[i]+'&'
+                    url_reels += param_x
+
                 reels = requests.get(
                     url=url_reels,
                     params={'reel_ids': h_id_.split(',')},
-                    headers=ig_header()
-                ).text
-                print(reels)
+                    headers={'user-agent':'Mozilla/5.0 (iPhone; CPU iPhone OS 12_3_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 105.0.0.11.118 (iPhone11,8; iOS 12_3_1; en_US; en-US; scale=2.00; 828x1792; 165586599)', "Cookie": 'mid=YMJUBQALAAELocrA7R5OQqQQ1T3j; ig_did=4E3FEEDD-F58F-48B2-8BA3-1671F7177A62; shbid="2573\0549900223866\0541660307223:01f7467c84e6fa33f5de5c13c870ae0e03ec8805da3a5c0996cd8fafb6de7ffaf3d10344"; shbts="1628771223\0549900223866\0541660307223:01f7e2c476931846d07c5477e9ee8f0b2c6a2fa12898d53d6691235328cd30ef3c702ce5"; csrftoken=SxHX4R36sL3fPJ526IqkzzqzG1blSDsW; ds_user_id=44449831791; sessionid=44449831791:vHzv8Ku7W8XmJA:9; rur="PRN\05444449831791\0541660476945:01f73ab3cb77fc1c40fb50633ce76987e1a3772d6a65f2843d739789e3c407d613da8eb9"'}
+                ).json()
                 items = []
-                for h in h_id:
-                    items.append({'title': reels['reels'][f'highlight:{h}']['title'], 'media': reels['reels'][f'highlight:{h}']['items']})
+
+                for h in h_id_spl:
+                    print(h)
+                    items.append(
+                        {
+                            'title': reels['reels'][h]['title'], 
+                            'media': reels['reels'][h]['items']
+                        }
+                    )
 
                 result = dict(
                     count = len(items),
