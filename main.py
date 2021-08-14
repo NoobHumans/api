@@ -105,7 +105,7 @@ def ig_header():
         "Accept-Language": "id,en-US;q=0.7,en;q=0.3",
         "Cache-Control": "max-age=0",
         "Connection": "keep-alive",
-        "Cookie": "mid=YF7sjAALAAF-MqtkhOPIopCo5kNU; ig_did=1D303523-9F83-4CF9-8E13-1433BD0F9352; ig_nrcb=1; fbm_124024574287414=base_domain=.instagram.com; csrftoken=G5Bq0h0W3rSWhjV9bnADx8hJIRlfkp3h; ds_user_id=44449831791; sessionid=44449831791%3AUWaB4y4KQW9O6G%3A12; shbid=2573; shbts=1621268761.4835796; rur=NAO",
+        "Cookie": 'mid=YMJUBQALAAELocrA7R5OQqQQ1T3j; ig_did=4E3FEEDD-F58F-48B2-8BA3-1671F7177A62; shbid="2573\0549900223866\0541660307223:01f7467c84e6fa33f5de5c13c870ae0e03ec8805da3a5c0996cd8fafb6de7ffaf3d10344"; shbts="1628771223\0549900223866\0541660307223:01f7e2c476931846d07c5477e9ee8f0b2c6a2fa12898d53d6691235328cd30ef3c702ce5"; csrftoken=SxHX4R36sL3fPJ526IqkzzqzG1blSDsW; ds_user_id=44449831791; sessionid=44449831791:vHzv8Ku7W8XmJA:9; rur="PRN\05444449831791\0541660480229:01f707a19fcab8d479bf7b7f08d4a608fbe95ba37a310170fa82132a184bbadc32e899d6"',
         "Host": "www.instagram.com",
         "Upgrade-Insecure-Requests": "1",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0"
