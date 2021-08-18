@@ -62,6 +62,9 @@ def convert_size(size_bytes):
     s = round(size_bytes / p, 2)
     return '%s %s' % (s, size_name[i])
 
+def get_youtube_id(url):
+    pattern = r"(?:http(?:s|):\/\/|)(?:(?:www\.|)youtube(?:\-nocookie|)\.com\/(?:shorts\/)?(?:watch\?.*(?:|\&)v=|embed\/|v\/)|youtu\.be\/)([-_0-9A-Za-z]{11})"
+    return re.match(pattern, url).group(1) if re.match(pattern, url) else False
 
 def shortener(url):
     data = {'u': url}
@@ -105,7 +108,7 @@ def ig_header():
         "Accept-Language": "id,en-US;q=0.7,en;q=0.3",
         "Cache-Control": "max-age=0",
         "Connection": "keep-alive",
-        "Cookie": 'mid=YMJUBQALAAELocrA7R5OQqQQ1T3j; ig_did=4E3FEEDD-F58F-48B2-8BA3-1671F7177A62; shbid="2573\0549900223866\0541660307223:01f7467c84e6fa33f5de5c13c870ae0e03ec8805da3a5c0996cd8fafb6de7ffaf3d10344"; shbts="1628771223\0549900223866\0541660307223:01f7e2c476931846d07c5477e9ee8f0b2c6a2fa12898d53d6691235328cd30ef3c702ce5"; csrftoken=SxHX4R36sL3fPJ526IqkzzqzG1blSDsW; ds_user_id=44449831791; sessionid=44449831791:vHzv8Ku7W8XmJA:9; rur="PRN\05444449831791\0541660480229:01f707a19fcab8d479bf7b7f08d4a608fbe95ba37a310170fa82132a184bbadc32e899d6"',
+        "Cookie": "mid=YF7sjAALAAF-MqtkhOPIopCo5kNU; ig_did=1D303523-9F83-4CF9-8E13-1433BD0F9352; ig_nrcb=1; fbm_124024574287414=base_domain=.instagram.com; csrftoken=G5Bq0h0W3rSWhjV9bnADx8hJIRlfkp3h; ds_user_id=44449831791; sessionid=44449831791%3AUWaB4y4KQW9O6G%3A12; shbid=2573; shbts=1621268761.4835796; rur=NAO",
         "Host": "www.instagram.com",
         "Upgrade-Insecure-Requests": "1",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0"
@@ -1340,20 +1343,43 @@ def ytmp3():
     if request.args.get('url'):
         try:
             url = request.args.get('url')
-            regex = re.compile(r'(https?://)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)/(watch\?v=|embed/|v/|.+\?v=)?(?P<id>[A-Za-z0-9\-=_]{11})')
-            match = regex.match(url)
-            id = match.group('id')
-            r = bs(get('http://vid-loader.com/file/mp3/'+id).text, 'html.parser')
-            title = r.find('h2', class_='text-lg text-teal-600 font-bold m-2 text-center')
-            filesize = r.findAll('div', class_='text-shadow-1')[14]
-            f = r.findAll('a', class_='shadow-xl bg-blue-600 text-white hover:text-gray-300 focus:text-gray-300 focus:outline-none rounded-md p-2 border-solid border-2 border-black ml-2 mb-2 w-25')
-            dl = f[3]['href']
-            return {
-                'title': title.text,
-                'thumb': 'https://i.ytimg.com/vi/'+id+'/hqdefault.jpg',
-                'filesize': filesize.text,
-                'result': shortener(dl)
-            }
+            if not get_youtube_id(url):raise Exception('Invalid YouTube url')
+            if True:
+                analyze =bs(post('https://www.y2mate.com/mates/en68/analyze/ajax', data={'url': f'https://youtu.be/{get_youtube_id(url)}', 'q_auto': 0, 'ajax': 1}).json()['result'], 'html.parser')
+                analyze_tab = analyze.find('div', class_='tab-content')
+                title = analyze.find('div', class_='caption text-left').find('b').text
+                thumbnail = analyze.find('img', {'alt':'Youtube downloader thumbnail'})['src']
+                mp3 = analyze_tab.find('div', id='mp3')
+                tbody_mp3 = mp3.find('tbody').findAll('tr')
+                sc_data = analyze.findAll('script')[1].string
+                mp3_data = []
+                td = tbody_mp3[0].findAll('td')
+                quality = td[0].find('a').text.replace(' .mp3 (', '').replace(')', '')
+                fquality = '128'
+                filesize = td[1].text
+                data_dl={
+                    'type': 'youtube', 
+                    '_id': re.search('var k__id = "(.+?)"', sc_data)[1], 
+                    'v_id': get_youtube_id(url), 
+                    'ajax': '1', 
+                    'token': '', 
+                    'ftype': 'mp3', 
+                    'fquality': fquality
+                }
+                download = bs(post(
+                    'https://www.y2mate.com/mates/en68/convert', 
+                    data_dl
+                ).json()['result'], 'html.parser').a['href']
+                result = {
+                    'quality': fquality.replace('p',''),
+                    'file_size': filesize,
+                    'download': download
+                }
+                return {
+                    'title': title,
+                    'thumbnail': thumbnail,
+                    'result': result
+                }
         except Exception as e:
             print(e)
             return{
@@ -1369,20 +1395,63 @@ def ytmp4():
     if request.args.get('url'):
         try:
             url = request.args.get('url')
-            regex = re.compile(r'(https?://)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)/(watch\?v=|embed/|v/|.+\?v=)?(?P<id>[A-Za-z0-9\-=_]{11})')
-            match = regex.match(url)
-            id = match.group('id')
-            r = bs(get('http://vid-loader.com/file/mp4/'+id).text, 'html.parser')
-            title = r.find('h2', class_='text-lg text-teal-600 font-bold m-2 text-center')
-            filesize = r.findAll('div', class_='text-shadow-1')[2]
-            f = r.find('a', class_='shadow-xl bg-blue-600 text-white hover:text-gray-300 focus:text-gray-300 focus:outline-none rounded-md p-2 border-solid border-2 border-black ml-2 mb-2 w-25')
-            dl = f['href']
+            if not get_youtube_id(url):raise Exception('Invalid YouTube url')
+            if True:
+                analyze =bs(post('https://www.y2mate.com/mates/en68/analyze/ajax', data={'url': f'https://youtu.be/{get_youtube_id(url)}', 'q_auto': 0, 'ajax': 1}).json()['result'], 'html.parser')
+                analyze_tab = analyze.find('div', class_='tab-content')
+                title = analyze.find('div', class_='caption text-left').find('b').text
+                thumbnail = analyze.find('img', {'alt':'Youtube downloader thumbnail'})['src']
+                mp4 = analyze_tab.find('div', id='mp4')
+                tbody_mp4 = mp4.find('tbody').findAll('tr')
+                sc_data = analyze.findAll('script')[1].string
+                mp4_data = []
+                for i in range(len(tbody_mp4)):
+                    if i == len(tbody_mp4) - 1:
+                        break
+                    else:
+                        td = tbody_mp4[i].findAll('td')
+                        quality = td[0].find('a').text.replace(' full-HD', '').replace(' m-HD', '')
+                        if '1080' in quality:
+                            fquality = '1080'
+                        elif '720' in quality:
+                            fquality = '720p'
+                        elif '480' in quality:
+                            fquality = '480'
+                        elif '360' in quality:
+                            fquality = '360'
+                        elif '240' in quality:
+                            fquality = '240p'
+                        elif '144p (.mp4)' in quality:
+                            fquality = '144p'
+                        else:
+                            fquality = ''
+                        filesize = td[1].text
+                        data_dl={
+                            'type': 'youtube', 
+                            '_id': re.search('var k__id = "(.+?)"', sc_data)[1], 
+                            'v_id': get_youtube_id(url), 
+                            'ajax': '1', 
+                            'token': '', 
+                            'ftype': 'mp4', 
+                            'fquality': fquality
+                        }
+                        if '144p (.3gp)' in quality:
+                            data_dl['ftype'] = '3gp'
+                        download = bs(post(
+                            'https://www.y2mate.com/mates/en68/convert', 
+                            data_dl
+                        ).json()['result'], 'html.parser').a['href']
+                        result = {
+                            'quality': fquality.replace('p',''),
+                            'file_size': filesize,
+                            'download': download
+                        }
+                        mp4_data.append(result)
             return {
-                'title': title.text,
-                'thumb': 'https://i.ytimg.com/vi/'+id+'/hqdefault.jpg',
-                'filesize': filesize.text,
-                'result': shortener(dl)
-            }
+                'title': title,
+                'thumbnail': thumbnail,
+                'result': mp4_data
+                }
         except Exception as e:
             print(e)
             return{
