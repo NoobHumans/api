@@ -62,6 +62,9 @@ def convert_size(size_bytes):
     s = round(size_bytes / p, 2)
     return '%s %s' % (s, size_name[i])
 
+def get_numbers(string):
+    return ''.join(filter(lambda i: i.isdigit(), string))
+
 def get_youtube_id(url):
     pattern = r"(?:http(?:s|):\/\/|)(?:(?:www\.|)youtube(?:\-nocookie|)\.com\/(?:shorts\/)?(?:watch\?.*(?:|\&)v=|embed\/|v\/)|youtu\.be\/)([-_0-9A-Za-z]{11})"
     return re.match(pattern, url).group(1) if re.match(pattern, url) else False
@@ -2064,15 +2067,35 @@ def fb():
     if request.args.get('url'):
         try:
             url = request.args.get('url')
-            be = bs(requests.post('https://www.getfvid.com/downloader', data={'url': url}).text, 'html.parser').find('div', class_='col-md-4 btns-download')
-            dl = be.findAll('a')
-            hd = dl[0]
-            normal = dl[1]
-            return{
-                'result':{
-                    'hd': hd['href'],
-                    'normal': normal['href']
+            action = requests.post(
+                'https://snapsave.app/action.php',
+                data={
+                    "url":url
+                },
+                headers={
+                    'origin':'https://snapsave.app',
+                    'referer':'https://snapsave.app/',
+                    'sec-ch-ua':'"Chromium";v="92", " Not A;Brand";v="99", "Google Chrome";v="92"',
+                    'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36'
                 }
+            )
+            base = bs(action.json()['data'], 'html.parser')
+            thumbnail = base.find('video', id='vid')['poster']
+            tbody = base.find('tbody')
+            result = []
+            for i in tbody.findAll('tr'):
+                quality = get_numbers(i.find('td', class_='video-quality').text)+'p'
+                if i.find('a'):
+                    download_link = i.find('a')['href']
+                if i.find('button'):
+                    download_link = i.find('button')['onclick'].replace('\n', '').replace("get_progress('", "").replace("', '0')", "").replace(";sendEvent('Click_download_Render')", "")
+                result.append({
+                    'quality': quality,
+                    'download': download_link
+                })
+            return{
+                'thumbnail':thumbnail,
+                'result':result
             }
         except Exception as e:
             print(e)
