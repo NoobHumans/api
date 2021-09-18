@@ -5586,7 +5586,7 @@ def instagram_highlight():
 def brainly():
     if request.args.get('q'):
         q = request.args.get('q')
-        r = cloudscraper.create_scraper()
+        r = requests
         try:
             formatGraphQl = """
 query SearchQuery($query: String!, $first: Int!, $after: ID) {
@@ -5639,6 +5639,19 @@ query SearchQuery($query: String!, $first: Int!, $after: ID) {
             result = []
             base = r.post(
                 url='https://brainly.co.id/graphql/id',
+                headers={
+                    'cache-control':'max-age=0',
+                    'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36',
+                    'Cookie':'Zadanepl_cookie[Token][Guest]=jGeqK4vgIYsBXE3qflpT5i8PvjB1WCBTcPwflJ9MxW2VfHTuZZ02aE4CaSuQtIKgKLdYN37I4qn6EpTS; _ga=GA1.3.962987678.1626879775; _hjid=711c9cb0-7d31-4d19-a457-d168c44ba965; __gads=ID=ac680694e77dfe64:T=1626879792:S=ALNI_MYsDHWnFgpYX_gsW9IbqECNkJCpZA; _cc_id=10f768e537c24fb3ffacbe66ede5d95b; _pbjs_userid_consent_data=3524755945110770; _pubcid=d2d91bc7-a84b-4851-a2c5-4c9736dbc1dc; _gaexp=GAX1.3.si3xUIOWQzWrXTwRnvUAgA.18942.1; _lr_env_src_ats=false; pbjs-unifiedid={"TDID":"c364c630-e0f7-40bf-b188-60597a44784e","TDID_LOOKUP":"TRUE","TDID_CREATED_AT":"2021-07-25T13:02:48"}; cto_bidid=2PfiCl9wVXZhUXZQem9XT3U1V29FU3FpNzZhSVg4ZHVxczl5dU1JQk94dGw1V1ZnTXBtS3ZScUE4M3pWZXZ1eHFHQ1RyQzJRRENhVlo2YWoyeHA3OUFQd1FsZkZ1MCUyQiUyQkZWc01laUhKZFczcXJ0MU0lM0Q; cto_bundle=JJofXV8yZ2NnJTJGTTlZbkI2OVVCZnpkbE5QTTBSZ3RoTTBkU3FwdkRhdjJ3aVN5YWpFY1o1eXdObjBXM2dTQktqZU9DTjNpaU14QlNZUlVTRFFWakQyYTJNaTBCT0JMd0psTldqa05ubmRVck9RbnglMkY3WVpMVU5EWGdVZEJhaVlQaSUyRlpPYlNlcnJuenVkS3B4SWFJYURvYjFjbEElM0QlM0Q; _gid=GA1.3.2072055132.1631941124; _hjAbsoluteSessionInProgress=0; _hjIncludedInSessionSample=0',
+                    'sec-ch-ua':'"Google Chrome";v="93", " Not;A Brand";v="99", "Chromium";v="93"',
+                    #'sec-ch-ua-mobile:':'?0',
+                    'sec-ch-ua-platform':'"Windows"',
+                    'sec-fetch-dest':'document',
+                    'sec-fetch-mode':'navigate',
+                    'sec-fetch-site':'same-origin',
+                    'sec-fetch-user':'?1',
+                    'upgrade-insecure-requests':'1'
+                },
                 json=json_data).json()
 
             edges = base['data']['questionSearch']['edges']
