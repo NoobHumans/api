@@ -344,62 +344,6 @@ def dewabatch():
             'msg': '[!] Masukkan parameter q'
         }
 
-@app.route('/api/komiku', methods=['GET','POST'])
-def komiku():
-    if request.args.get('q'):
-        try:
-            q = request.args.get('q')
-            komi = search_komiku(q)
-            if 'Tidak di temukan' not in komi:
-                manga = scrap_komiku(komi)
-                return {
-                    'status': 200,
-                    'info': manga['info'],
-                    'genre': manga['genre'],
-                    'sinopsis': manga['sinopsis'],
-                    'thumb': manga['thumb'],
-                    'link_dl': manga['dl_link']
-                }
-        except Exception as e:
-            print(e)
-            return {
-                'status': False,
-                'error': 'Manga %s Tidak di temukan' % unquote(q)
-            }
-    else:
-        return {
-            'status': False,
-            'msg': '[!] Masukkan parameter q'
-        }
-
-@app.route('/api/kuso', methods=['GET','POST'])
-def kusonime():
-    if request.args.get('q'):
-        try:
-            q = request.args.get('q')
-            he=search_kusonime(quote(q))
-            kuso=scrap_kusonime(he)
-            if he != '':
-                return {
-                    'status': 200,
-                    'sinopsis': kuso['sinopsis'],
-                    'thumb': kuso['thumb'],
-                    'info': kuso['info'],
-                    'title': kuso['title'],
-                    'link_dl': kuso['link_dl']
-                }
-        except Exception as e:
-            print(e)
-            return {
-                'status': False,
-                'error': 'Anime %s Tidak di temukan' % unquote(q)
-            }
-    else:
-        return {
-            'status': False,
-            'msg': '[!] Masukkan parameter q'
-        }
-
 @app.route('/api/otakudesu')
 def otakudesuu():
     if request.args.get('q'):
@@ -2198,13 +2142,23 @@ def pinterest():
     if request.args.get('url'):
         try:
             q = request.args.get('url')
-            r = cloudscraper.create_scraper()
-            be = bs(r.post('https://pinterestvideodownloader.com/', data={'url': q}).text, 'html.parser').find('div', class_='col-sm-12')
-            if be.find('video'):
-                result = be.find('source')['src']
+            base = bs(requests.post(
+                'https://www.expertsphp.com/download.php',
+                data={
+                    'url': q
+                    }
+            ).text, 'html.parser')
+            showdata = base.find('div',class_='text-center', id='showdata')
+            if (showdata.find('img') and 'https://i.pinimg.com/' in showdata.find('img')['src']):
+                type_ = 'image'
+                result = showdata.find('img')['src']
+            elif (showdata.find('video') and 'pinimg.com/videos'in showdata.find('video').find('source')['src']):
+                type_ = 'video'
+                result = showdata.find('video').find('source')['src']
             else:
-                result = be.find('img')['src']
+                raise Exception('Invalid')
             return{
+                'type': type_,
                 'result': result
             }
         except Exception as e:
@@ -2528,25 +2482,6 @@ def yt_search():
             q = request.args.get('q')
             return {
                 'result': VideosSearch(q, limit = 10).result()
-            }
-        except Exception as e:
-            print(e)
-            return{
-                'result': q+' tidak di temukan'
-            }
-    else:
-        return{
-            'result': 'Masukkan parameter q!'
-        }
-
-@app.route('/api/google-search', methods=['GET','POST'])
-def google_search():
-    if request.args.get('q'):
-        try:
-            q = request.args.get('q')
-            print(search(q, num_results=10))
-            return {
-                'a':'b'
             }
         except Exception as e:
             print(e)
