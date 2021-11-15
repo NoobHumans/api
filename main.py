@@ -494,8 +494,8 @@ def waifu():
     if result['gender'] == 'female':
         return {
             'status': 200,
-            'name': result['name'],
-            'desc': desc,
+            'name': result['givenName'],
+            'desc': result['description'],
             'image': result['image'],
             'source': result['url']
         }
@@ -1294,43 +1294,11 @@ def ytmp3():
     if request.args.get('url'):
         try:
             url = request.args.get('url')
-            if not get_youtube_id(url):raise Exception('Invalid YouTube url')
-            if True:
-                analyze =bs(post('https://www.y2mate.com/mates/en68/analyze/ajax', data={'url': f'https://youtu.be/{get_youtube_id(url)}', 'q_auto': 0, 'ajax': 1}).json()['result'], 'html.parser')
-                analyze_tab = analyze.find('div', class_='tab-content')
-                title = analyze.find('div', class_='caption text-left').find('b').text
-                thumbnail = analyze.find('img', {'alt':'Youtube downloader thumbnail'})['src']
-                mp3 = analyze_tab.find('div', id='mp3')
-                tbody_mp3 = mp3.find('tbody').findAll('tr')
-                sc_data = analyze.findAll('script')[1].string
-                mp3_data = []
-                td = tbody_mp3[0].findAll('td')
-                quality = td[0].find('a').text.replace(' .mp3 (', '').replace(')', '')
-                fquality = '128'
-                filesize = td[1].text
-                data_dl={
-                    'type': 'youtube', 
-                    '_id': re.search('var k__id = "(.+?)"', sc_data)[1], 
-                    'v_id': get_youtube_id(url), 
-                    'ajax': '1', 
-                    'token': '', 
-                    'ftype': 'mp3', 
-                    'fquality': fquality
-                }
-                download = bs(post(
-                    'https://www.y2mate.com/mates/en68/convert', 
-                    data_dl
-                ).json()['result'], 'html.parser').a['href']
-                result = {
-                    'quality': fquality.replace('p',''),
-                    'file_size': filesize,
-                    'download': download
-                }
-                return {
-                    'title': title,
-                    'thumbnail': thumbnail,
-                    'result': result
-                }
+            result = requests.get(f'https://youtube-media-download.herokuapp.com/parse?url={url}&type=mp3').json()
+            if result['error'] == True:
+                raise
+            else:
+                return result
         except Exception as e:
             print(e)
             return{
@@ -1346,63 +1314,11 @@ def ytmp4():
     if request.args.get('url'):
         try:
             url = request.args.get('url')
-            if not get_youtube_id(url):raise Exception('Invalid YouTube url')
-            if True:
-                analyze =bs(post('https://www.y2mate.com/mates/en68/analyze/ajax', data={'url': f'https://youtu.be/{get_youtube_id(url)}', 'q_auto': 0, 'ajax': 1}).json()['result'], 'html.parser')
-                analyze_tab = analyze.find('div', class_='tab-content')
-                title = analyze.find('div', class_='caption text-left').find('b').text
-                thumbnail = analyze.find('img', {'alt':'Youtube downloader thumbnail'})['src']
-                mp4 = analyze_tab.find('div', id='mp4')
-                tbody_mp4 = mp4.find('tbody').findAll('tr')
-                sc_data = analyze.findAll('script')[1].string
-                mp4_data = []
-                for i in range(len(tbody_mp4)):
-                    if i == len(tbody_mp4) - 1:
-                        break
-                    else:
-                        td = tbody_mp4[i].findAll('td')
-                        quality = td[0].find('a').text.replace(' full-HD', '').replace(' m-HD', '')
-                        if '1080' in quality:
-                            fquality = '1080'
-                        elif '720' in quality:
-                            fquality = '720p'
-                        elif '480' in quality:
-                            fquality = '480'
-                        elif '360' in quality:
-                            fquality = '360'
-                        elif '240' in quality:
-                            fquality = '240p'
-                        elif '144p (.mp4)' in quality:
-                            fquality = '144p'
-                        else:
-                            fquality = ''
-                        filesize = td[1].text
-                        data_dl={
-                            'type': 'youtube', 
-                            '_id': re.search('var k__id = "(.+?)"', sc_data)[1], 
-                            'v_id': get_youtube_id(url), 
-                            'ajax': '1', 
-                            'token': '', 
-                            'ftype': 'mp4', 
-                            'fquality': fquality
-                        }
-                        if '144p (.3gp)' in quality:
-                            data_dl['ftype'] = '3gp'
-                        download = bs(post(
-                            'https://www.y2mate.com/mates/en68/convert', 
-                            data_dl
-                        ).json()['result'], 'html.parser').a['href']
-                        result = {
-                            'quality': fquality.replace('p',''),
-                            'file_size': filesize,
-                            'download': download
-                        }
-                        mp4_data.append(result)
-            return {
-                'title': title,
-                'thumbnail': thumbnail,
-                'result': mp4_data
-                }
+            result = requests.get(f'https://youtube-media-download.herokuapp.com/parse?url={url}&type=mp4').json()
+            if result['error'] == True:
+                raise
+            else:
+                return result
         except Exception as e:
             print(e)
             return{
